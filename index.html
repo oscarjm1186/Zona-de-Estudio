@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Acceso Restringido | Space Lab Academy</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-space: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --card-glass: rgba(255, 255, 255, 0.1);
+            --text-light: #ffffff;
+            
+            /* Paleta de Botones */
+            --btn-sim-color: #00d2ff; /* Cian - Examen */
+            --btn-lib-color: #d500f9; /* Magenta - Libros */
+            --btn-media-color: #ff9100; /* Naranja - Media */
+            --btn-temario-color: #ffd700; /* Amarillo - Temario */
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-space);
+            color: var(--text-light);
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- PANTALLA DE BLOQUEO --- */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 12, 41, 0.98); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .login-box {
+            text-align: center; background: rgba(255,255,255,0.05); padding: 40px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
+        }
+        input[type="password"] {
+            padding: 15px; border-radius: 30px; border: 2px solid #302b63;
+            background: rgba(0,0,0,0.3); color: white; font-size: 1.2rem;
+            text-align: center; outline: none; margin-top: 20px; width: 200px; transition: 0.3s;
+        }
+        input[type="password"]:focus { border-color: var(--btn-sim-color); box-shadow: 0 0 15px var(--btn-sim-color); }
+        .btn-unlock {
+            margin-top: 20px; padding: 12px 30px; border-radius: 30px;
+            background: var(--btn-sim-color); color: #0f0c29; border: none;
+            font-weight: bold; cursor: pointer; font-size: 1rem;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        #main-content {
+            filter: blur(10px); transition: filter 0.5s ease;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; flex: 1; }
+        header { text-align: center; margin-bottom: 50px; }
+        h1 { font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;}
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-glass); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; padding: 20px; text-align: center;
+            transition: transform 0.3s; color: white;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--btn-sim-color); }
+        
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; color: var(--btn-sim-color); }
+        .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; }
+        .card-desc { font-size: 0.9rem; color: #d1d1d1; margin-bottom: 20px; flex-grow: 1; }
+        
+        /* BOTONES DE ACCIÓN (2x2 GRID) */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 5px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .btn i { font-size: 1.1rem; margin-bottom: 4px; }
+
+        /* Estilos Específicos */
+        .btn-sim { color: var(--btn-sim-color); border-color: rgba(0, 210, 255, 0.3); }
+        .btn-sim:hover { background: var(--btn-sim-color); color: #0f0c29; }
+
+        .btn-lib { color: var(--btn-lib-color); border-color: rgba(213, 0, 249, 0.3); }
+        .btn-lib:hover { background: var(--btn-lib-color); color: white; }
+
+        .btn-media { color: var(--btn-media-color); border-color: rgba(255, 145, 0, 0.3); }
+        .btn-media:hover { background: var(--btn-media-color); color: #0f0c29; }
+
+        .btn-temario { color: var(--btn-temario-color); border-color: rgba(255, 215, 0, 0.3); }
+        .btn-temario:hover { background: var(--btn-temario-color); color: #0f0c29; }
+        
+        /* --- ESTILOS DEL MODAL (POPUP GENERAL) --- */
+        .modal {
+            display: none; 
+            position: fixed; z-index: 10000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.4s;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 5% auto; padding: 30px;
+            border: 1px solid var(--btn-temario-color);
+            border-radius: 15px; width: 90%; max-width: 600px;
+            color: white; position: relative;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+        
+        /* --- ESTILOS ESPECÍFICOS BIENVENIDA --- */
+        #welcome-modal .modal-content {
+            border-color: var(--btn-sim-color); /* Borde Cian */
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+        }
+        #welcome-modal h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--btn-sim-color);
+        }
+        #welcome-modal p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #eee;
+        }
+        .btn-welcome {
+            background-color: var(--btn-sim-color);
+            color: #0f0c29;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-welcome:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--btn-sim-color); }
+
+        /* Estilos Temarios */
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: white; }
+        .modal-header h2 { color: var(--btn-temario-color); margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px;}
+        .modal-body { text-align: left; font-size: 0.95rem; line-height: 1.6; }
+        .modal-body ul { list-style-type: none; padding: 0; }
+        .modal-body li { margin-bottom: 8px; padding-left: 15px; border-left: 2px solid var(--btn-temario-color); }
+        .modal-body strong { color: var(--btn-sim-color); }
+
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #666; margin-top: 40px; }
+        @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
+        @media (max-width: 600px) { h1 { font-size: 1.8rem; } }
+    </style>
+</head>
+<body>
+
+<div id="lock-screen">
+    <div class="login-box">
+        <i class="fa-solid fa-user-astronaut" style="font-size: 4rem; color: var(--btn-sim-color); margin-bottom: 15px;"></i>
+        <h2>Zona Privada</h2>
+        <input type="password" id="passwordInput" placeholder="Contraseña">
+        <br>
+        <button class="btn-unlock" onclick="attemptLogin()">Entrar</button>
+        <p id="errorMsg" style="color: #ff4444; margin-top: 15px; display: none;">Clave incorrecta</p>
+    </div>
+</div>
+
+<div id="welcome-modal" class="modal">
+    <div class="modal-content">
+        <i class="fa-solid fa-heart" style="font-size: 3rem; color: #ff4081; margin-bottom: 15px;"></i>
+        <h2>¡Hola Oso Espacial!</h2>
+        <p>
+            Hice este espacio de estudio a partir del temario que proporciona tu escuela, aquí encontrarás libros, recursos audiovisuales (Listas de reproducción que hice específicamnete para ti, podcasts, etc) y un examen de simulación de cada materia. 
+            <br><br>
+            El simulador está diseñado para que repases aquellos temas en los que tengas errores al responder.
+        </p>
+        <button class="btn-welcome" onclick="closeWelcome()">ENTRAR</button>
+    </div>
+</div>
+
+<div id="main-content">
+    <div class="container">
+        <header>
+            <i class="fa-solid fa-rocket" style="font-size: 3rem; color: white; margin-bottom: 15px;"></i>
+            <h1>MATERIAL DE ESTUDIO OSO</h1>
+            <h2>SEGUNDO SEMESTRE CECyT 11</h2>
+            <p style="font-size: 1.2rem; color: #b3b3b3;">Simulador | Libros | Media | Temario</p>
+        </header>
+
+        <div class="grid">
+            
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-ruler-combined"></i></div>
+                <div class="card-title">Geometría Y Trigonometría</div>
+                <div class="card-desc">Ángulos y funciones.</div>
+                <div class="action-buttons">
+                    <a href="geometria.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1vESn4Jas23mCKDkz9MuNnRwJ1ZtOKSr4?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://youtube.com/playlist?list=PLZDpkkVM3ygVgL_z7PQ3pVFA4kgadsdPL&si=hCwGyap3zs1lSYgA" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-geo')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-landmark"></i></div>
+                <div class="card-title">Historia De México Contemporaneo II</div>
+                <div class="card-desc">México Contemporáneo.</div>
+                <div class="action-buttons">
+                    <a href="historia.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/18BUUnF8pQ3NtS3VUhXWXxcSHJ9e9HE9z?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://youtube.com/playlist?list=PLipa4sCpUmJ9AYNMSSxOCDDQBErZup5u7&si=MHOoKI-L1PeLimJw" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-hist')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                <div class="card-title">Computación Básica II</div>
+                <div class="card-desc">Excel y HTML.</div>
+                <div class="action-buttons">
+                    <a href="computacion.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1rwGokJsAiDzVgFXHmlM2rjXRJU4cneyt?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://youtube.com/playlist?list=PLZDpkkVM3ygWGp8rmrB05McLt9loh-ZiF&si=li0HYrXdQWo9Zxlw" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-comp')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-dna"></i></div>
+                <div class="card-title">Biología Básica</div>
+                <div class="card-desc">Célula, genética y ecología.</div>
+                <div class="action-buttons">
+                    <a href="biologia.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1UsCo8pgfU3wtPlHvhnLp_8uBegMuEWiU?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://youtube.com/playlist?list=PLZDpkkVM3ygXsh5wCdonh6XjNiBlLGxQk&si=ovOgsL0jla9yRPOr" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-bio')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-comments"></i></div>
+                <div class="card-title">Inglés II</div>
+                <div class="card-desc">Gramática Y Vocabulario.</div>
+                <div class="action-buttons">
+                    <a href="ingles.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://www.busuu.com/es?utm_group=LatAm_ES_Web_Brand_E%2BP&gad_campaignid=10326904764" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Practica Online</a>
+                    <button onclick="openModal('m-eng')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+                <div class="card-title">Filosofía II</div>
+                <div class="card-desc">Lógica simbólica.</div>
+                <div class="action-buttons">
+                    <a href="filosofia.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1_kh-9cIMct-Ts1VGEid6zSySzRO6iBkp?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://youtube.com/playlist?list=PLZDpkkVM3ygUev0tuJ5D-n6Eb8jtjCYfS&si=cb5MOd8Ih7rax5ra" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-fil')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                <div class="card-title">Comunicación Y Liderazgo</div>
+                <div class="card-desc">Trabajo en equipo.</div>
+                <div class="action-buttons">
+                    <a href="comunicacion.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1mScr2eaRhWIPrYzurpY6IRqPptmWVpiR?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <a href="https://www.youtube.com/watch?v=3X30vGbLol8" target="_blank" class="btn btn-media"><i class="fa-solid fa-circle-play"></i> Media</a>
+                    <button onclick="openModal('m-com')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                <div class="card-title">Expresión Oral Y Escrita II</div>
+                <div class="card-desc">Literatura y discursos.</div>
+                <div class="action-buttons">
+                    <a href="expresion.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <a href="https://drive.google.com/drive/folders/1mScr2eaRhWIPrYzurpY6IRqPptmWVpiR?usp=drive_link" target="_blank" class="btn btn-lib"><i class="fa-solid fa-book"></i> Libros</a>
+                    <button onclick="openModal('m-exp')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-compass"></i></div>
+                <div class="card-title">Orientación Juvenil II</div>
+                <div class="card-desc">Vocación y equidad.</div>
+                <div class="action-buttons">
+                    <a href="orientacion.html" class="btn btn-sim"><i class="fa-solid fa-play"></i> Examen</a>
+                    <button onclick="openModal('m-ori')" class="btn btn-temario"><i class="fa-solid fa-list-check"></i> Temario</button>
+                </div>
+            </div>
+
+        </div>
+        <footer>&copy; 2026 Space Lab Arquitectura.</footer>
+    </div>
+</div>
+
+<div id="m-geo" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-geo')">&times;</span>
+    <div class="modal-header"><h2>Geometría y Trigonometría</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Funciones Trascendentes</strong><br>Exponenciales y Logaritmos (propiedades y gráficas).</li>
+            <li><strong>Unidad 2: Geometría Euclidiana</strong><br>Ángulos, Triángulos (Rectas notables), Polígonos.</li>
+            <li><strong>Unidad 3: Trigonometría</strong><br>Razones trigonométricas, Ley de Senos/Cosenos, Identidades.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-hist" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-hist')">&times;</span>
+    <div class="modal-header"><h2>Historia de México II</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Crisis y Reconstrucción (1900-1940)</strong><br>Porfiriato, Revolución, Cardenismo.</li>
+            <li><strong>Unidad 2: Estado Benefactor (1940-1982)</strong><br>Milagro Mexicano, Movimientos Sociales, Populismo.</li>
+            <li><strong>Unidad 3: Neoliberalismo (1982-Actualidad)</strong><br>Tecnocracia, TLCAN, Globalización, Alternancia.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-comp" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-comp')">&times;</span>
+    <div class="modal-header"><h2>Computación Básica II</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Excel Avanzado</strong><br>Fórmulas, Funciones (SI, BUSCARV), Gráficos.</li>
+            <li><strong>Unidad 2: Bases de Datos</strong><br>Conceptos (Campo, Registro), Modelos Relacionales.</li>
+            <li><strong>Unidad 3: Diseño Web</strong><br>Introducción a HTML y estructura web.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-bio" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-bio')">&times;</span>
+    <div class="modal-header"><h2>Biología Básica</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: La Célula</strong><br>Teoría celular, Procariotas/Eucariotas, Organelos.</li>
+            <li><strong>Unidad 2: Metabolismo</strong><br>Fotosíntesis, Respiración Celular, Enzimas.</li>
+            <li><strong>Unidad 3: Genética</strong><br>Mitosis/Meiosis, Leyes de Mendel.</li>
+            <li><strong>Unidad 4: Ecología</strong><br>Ecosistemas, Flujo de energía, Biodiversidad.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-eng" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-eng')">&times;</span>
+    <div class="modal-header"><h2>Inglés II</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Grammar</strong><br>Present Simple vs Continuous, Past Simple vs Continuous, Modals.</li>
+            <li><strong>Vocabulary</strong><br>Health, Shopping, Daily Routines, Biographies.</li>
+            <li><strong>Skills</strong><br>Reading comprehension & Writing structure.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-fil" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-fil')">&times;</span>
+    <div class="modal-header"><h2>Filosofía II (Lógica)</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: El Concepto</strong><br>Comprensión y Extensión.</li>
+            <li><strong>Unidad 2: El Juicio</strong><br>Cuadro de Oposición (A, E, I, O).</li>
+            <li><strong>Unidad 3: El Raciocinio</strong><br>Silogismos, Figuras, Falacias.</li>
+            <li><strong>Unidad 4: Lógica Simbólica</strong><br>Tablas de verdad y conectivos.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-com" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-com')">&times;</span>
+    <div class="modal-header"><h2>Comunicación y Liderazgo</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Comunicación</strong><br>Proceso, Barreras, Asertividad.</li>
+            <li><strong>Unidad 2: Liderazgo</strong><br>Estilos, Grid Gerencial, Jefe vs Líder.</li>
+            <li><strong>Unidad 3: Equipos</strong><br>Manejo de conflictos, Trabajo colaborativo.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-exp" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-exp')">&times;</span>
+    <div class="modal-header"><h2>Expresión Oral y Escrita II</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Lenguaje</strong><br>Funciones de la lengua, Denotación/Connotación.</li>
+            <li><strong>Unidad 2: Literatura</strong><br>Narrativa, Lírica (Poesía), Dramática (Teatro).</li>
+            <li><strong>Unidad 3: Redacción</strong><br>Ortografía, Puntuación, Cualidades de la voz.</li>
+        </ul>
+    </div>
+</div></div>
+
+<div id="m-ori" class="modal"><div class="modal-content">
+    <span class="close-btn" onclick="closeModal('m-ori')">&times;</span>
+    <div class="modal-header"><h2>Orientación Juvenil II</h2></div>
+    <div class="modal-body">
+        <ul>
+            <li><strong>Unidad 1: Toma de Decisiones</strong><br>Elección de carrera, Factores internos/externos.</li>
+            <li><strong>Unidad 2: Sexualidad</strong><br>Vínculos afectivos, Anticoncepción, ITS.</li>
+            <li><strong>Unidad 3: Género</strong><br>Equidad, Roles, Prevención de violencia.</li>
+        </ul>
+    </div>
+</div></div>
+
+<script>
+    // --- LÓGICA DEL CANDADO Y BIENVENIDA ---
+    const correctPass = "Astro2026"; 
+    
+    function showWelcome() {
+        document.getElementById('lock-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('welcome-modal').style.display = 'block';
+            // Mantener fondo borroso mientras está la bienvenida
+            document.getElementById('main-content').style.filter = 'blur(10px)'; 
+        }, 500);
+    }
+
+    function closeWelcome() {
+        document.getElementById('welcome-modal').style.display = 'none';
+        document.getElementById('main-content').style.filter = 'blur(0)';
+    }
+
+    // Al cargar: verificar si ya hay sesión
+    document.addEventListener("DOMContentLoaded", () => {
+        if (sessionStorage.getItem("spaceLabAuth") === "true") {
+            // Si ya entró antes, saltar bloqueo Y bienvenida
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('welcome-modal').style.display = 'none';
+            document.getElementById('main-content').style.filter = 'blur(0)';
+        }
+    });
+
+    function attemptLogin() {
+        const input = document.getElementById('passwordInput').value;
+        if(input === correctPass) {
+            sessionStorage.setItem("spaceLabAuth", "true");
+            showWelcome();
+        } else {
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('passwordInput').value = '';
+        }
+    }
+    
+    document.getElementById("passwordInput").addEventListener("keypress", (e) => { if(e.key==="Enter") attemptLogin() });
+
+    // MODALES POPUP (TEMARIOS)
+    function openModal(id) { document.getElementById(id).style.display = "block"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') { event.target.style.display = "none"; }
+    }
+</script>
+
+</body>
+</html>

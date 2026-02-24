@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometría y Trigonometría</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6a0dad; /* Morado Space Lab */
+            --secondary-color: #003366; /* Azul IPN */
+            --light-bg: #f8f9fa;
+            --text-color: #2c3e50;
+            --correct-color: #27ae60;
+            --incorrect-color: #c0392b;
+        }
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 0;
+        }
+        .header-container {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .container {
+            max-width: 900px;
+            margin: -30px auto 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1 { margin: 0; font-size: 2.2rem; }
+        h2 { margin: 10px 0 0 0; font-weight: 300; font-size: 1.2rem; opacity: 0.9; }
+        
+        /* Barra de Progreso */
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            height: 6px;
+        }
+        .progress-bar {
+            height: 6px;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .question-block {
+            margin-bottom: 30px;
+            padding: 25px;
+            border-left: 6px solid var(--secondary-color);
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .question-block:hover { transform: translateX(5px); }
+        .question-title {
+            font-weight: 700;
+            font-size: 1.15em;
+            margin-bottom: 15px;
+            display: block;
+            color: #2c3e50;
+        }
+        .options { display: flex; flex-direction: column; gap: 8px; }
+        .options label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background-color: #f0f4ff;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2);accent-color: var(--primary-color); }
+        
+        button#submitBtn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.4em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        button#submitBtn:hover { transform: translateY(-3px); }
+        
+        #result {
+            margin-top: 40px;
+            padding: 30px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--secondary-color);
+            background-color: #e8f0fe;
+            border-radius: 12px;
+            display: none;
+            border: 2px solid var(--secondary-color);
+        }
+        .explanation {
+            font-size: 0.95em;
+            margin-top: 15px;
+            display: none;
+            background-color: #fafafa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .correct-text { color: var(--correct-color); font-weight: bold; }
+        .incorrect-text { color: var(--incorrect-color); font-weight: bold; }
+
+        /* Botón flotante */
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            z-index: 99;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 600px) {
+            .container { padding: 20px; margin-top: -20px; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="header-container">
+    <h1>Simulador Geometría y Trigonometría</h1>
+</div>
+
+<div class="container">
+    <p style="text-align:center; color: #666; margin-bottom: 30px;">
+        Tómate tu tiempo y analiza cada pregunta.
+    </p>
+
+    <form id="quizForm">
+        <div id="questionsContainer"></div>
+        <button type="button" id="submitBtn" onclick="calculateScore()">Calificar Examen Completo</button>
+    </form>
+
+    <div id="result"></div>
+</div>
+
+<button onclick="topFunction()" id="scrollTopBtn" title="Volver arriba">⬆</button>
+
+<script>
+    /* BANCO DE 100 PREGUNTAS - BASADO EN GUÍA CECyT 11 */
+    
+    const quizData = [
+        // --- UNIDAD 1: FUNCIONES EXPONENCIALES Y LOGARÍTMICAS (1-20) ---
+        {
+            q: "1. ¿Cuál es el dominio de la función \\( f(x) = 3^x \\)?",
+            a: ["\\( (0, \\infty) \\)", "\\( (-\\infty, \\infty) \\)", "\\( \\mathbb{Z} \\)", "\\( x > 1 \\)"],
+            correct: 1,
+            desc: "El dominio de una función exponencial son todos los números reales."
+        },
+        {
+            q: "2. Convierte a logaritmo: \\( 2^5 = 32 \\)",
+            a: ["\\( \\log_2(32) = 5 \\)", "\\( \\log_5(32) = 2 \\)", "\\( \\log_{32}(2) = 5 \\)", "\\( \\ln(32)=5 \\)"],
+            correct: 0,
+            desc: "La base se mantiene. \\( b^y=x \\iff \\log_b x = y \\)."
+        },
+        {
+            q: "3. Propiedad \\( \\log(a \\cdot b) \\):",
+            a: ["\\( \\log a \\cdot \\log b \\)", "\\( \\log a - \\log b \\)", "\\( \\log a + \\log b \\)", "\\( a \\log b \\)"],
+            correct: 2,
+            desc: "Logaritmo de un producto es la suma de logaritmos."
+        },
+        {
+            q: "4. Valor de \\( \\ln(e) \\):",
+            a: ["0", "1", "\\( e \\)", "\\( \\infty \\)"],
+            correct: 1,
+            desc: "Logaritmo natural tiene base \\( e \\), y \\( \\log_b b = 1 \\)."
+        },
+        {
+            q: "5. Resuelve \\( 3^{x+1} = 27 \\):",
+            a: ["1", "2", "3", "0"],
+            correct: 1,
+            desc: "\\( 27=3^3 \\implies x+1=3 \\implies x=2 \\)."
+        },
+        {
+            q: "6. Simplifica \\( \\log(x^2) \\):",
+            a: ["\\( 2\\log x \\)", "\\( \\log x + 2 \\)", "\\( (\\log x)^2 \\)", "\\( \\frac{1}{2}\\log x \\)"],
+            correct: 0,
+            desc: "El exponente baja como coeficiente."
+        },
+        {
+            q: "7. Si \\( \\log_x(64) = 2 \\), halla \\( x \\):",
+            a: ["4", "8", "16", "32"],
+            correct: 1,
+            desc: "\\( x^2=64 \\implies x=8 \\)."
+        },
+        {
+            q: "8. Asíntota de \\( f(x) = e^x \\):",
+            a: ["Vertical en 0", "Horizontal en y=1", "Horizontal en y=0", "Oblicua"],
+            correct: 2,
+            desc: "La función exponencial nunca toca el eje X (y=0)."
+        },
+        {
+            q: "9. Valor de \\( \\log_{10}(1000) \\):",
+            a: ["1", "2", "3", "10"],
+            correct: 2,
+            desc: "\\( 10^3 = 1000 \\)."
+        },
+        {
+            q: "10. Inversa de \\( y = e^x \\):",
+            a: ["\\( y = \\ln x \\)", "\\( y = x^e \\)", "\\( y = 1/e^x \\)", "\\( y = \\sqrt{x} \\)"],
+            correct: 0,
+            desc: "La función logaritmo natural es inversa de la exponencial natural."
+        },
+        {
+            q: "11. Propiedad \\( \\log(a/b) \\):",
+            a: ["\\( \\log a / \\log b \\)", "\\( \\log a - \\log b \\)", "\\( \\log a + \\log b \\)", "\\( \\log(a-b) \\)"],
+            correct: 1,
+            desc: "Logaritmo de un cociente es la resta."
+        },
+        {
+            q: "12. Valor de \\( 5^0 \\):",
+            a: ["0", "1", "5", "Indefinido"],
+            correct: 1,
+            desc: "Todo número real (no cero) a la 0 es 1."
+        },
+        {
+            q: "13. Resuelve \\( \\log_2(x) = 5 \\):",
+            a: ["10", "25", "32", "64"],
+            correct: 2,
+            desc: "\\( x = 2^5 = 32 \\)."
+        },
+        {
+            q: "14. Fórmula de interés compuesto:",
+            a: ["\\( A = P(1+r)^t \\)", "\\( A = Prt \\)", "\\( A = P(1+rt) \\)", "\\( A = P^r \\)"],
+            correct: 0,
+            desc: "Es una función exponencial aplicada a finanzas."
+        },
+        {
+            q: "15. Transformar \\( \\sqrt{x} \\) a exponente:",
+            a: ["\\( x^2 \\)", "\\( x^{-1} \\)", "\\( x^{1/2} \\)", "\\( x^{-2} \\)"],
+            correct: 2,
+            desc: "La raíz cuadrada equivale a potencia 1/2."
+        },
+        {
+            q: "16. ¿Qué pasa con \\( y=b^x \\) si \\( 0 < b < 1 \\)?",
+            a: ["Es creciente", "Es decreciente", "Es constante", "Es vertical"],
+            correct: 1,
+            desc: "Si la base es fracción propia, la función decrece."
+        },
+        {
+            q: "17. Cambio de base: \\( \\log_b a \\) es igual a:",
+            a: ["\\( \\frac{\\ln a}{\\ln b} \\)", "\\( \\frac{\\ln b}{\\ln a} \\)", "\\( \\ln(a-b) \\)", "\\( \\ln a \\cdot \\ln b \\)"],
+            correct: 0,
+            desc: "Fórmula de cambio de base."
+        },
+        {
+            q: "18. Resuelve \\( e^{2x} = 1 \\):",
+            a: ["\\( x=0 \\)", "\\( x=1 \\)", "\\( x=e \\)", "\\( x=2 \\)"],
+            correct: 0,
+            desc: "\\( e^0 = 1 \\), por tanto \\( 2x=0 \\implies x=0 \\)."
+        },
+        {
+            q: "19. Dominio de \\( f(x) = \\log(x) \\):",
+            a: ["Reales", "Reales positivos", "Enteros", "Negativos"],
+            correct: 1,
+            desc: "No existe logaritmo de números negativos ni cero."
+        },
+        {
+            q: "20. Valor de \\( \\log_3(1/9) \\):",
+            a: ["2", "-2", "3", "0.5"],
+            correct: 1,
+            desc: "\\( 3^{-2} = 1/9 \\)."
+        },
+
+        // --- UNIDAD 2: GEOMETRÍA EUCLIDIANA (21-60) ---
+        {
+            q: "21. Definición de 'Axioma':",
+            a: ["Proposición que requiere demostración", "Verdad evidente que no requiere demostración", "Consecuencia de un teorema", "Instrumento de medida"],
+            correct: 1,
+            desc: "Base del método deductivo."
+        },
+        {
+            q: "22. Suma de ángulos interiores de un triángulo:",
+            a: ["90°", "180°", "270°", "360°"],
+            correct: 1,
+            desc: "Teorema fundamental de triángulos."
+        },
+        {
+            q: "23. Ángulos que suman 90° se llaman:",
+            a: ["Suplementarios", "Complementarios", "Opuestos", "Conjugados"],
+            correct: 1,
+            desc: "Complementarios suman 90, Suplementarios suman 180."
+        },
+        {
+            q: "24. Punto donde concurren las mediatrices:",
+            a: ["Incentro", "Baricentro", "Circuncentro", "Ortocentro"],
+            correct: 2,
+            desc: "Centro de la circunferencia circunscrita."
+        },
+        {
+            q: "25. Punto donde concurren las bisectrices:",
+            a: ["Incentro", "Baricentro", "Circuncentro", "Ortocentro"],
+            correct: 0,
+            desc: "Centro de la circunferencia inscrita."
+        },
+        {
+            q: "26. Teorema de Tales trata sobre:",
+            a: ["Ángulos rectos", "Proporcionalidad y semejanza", "Áreas", "Volúmenes"],
+            correct: 1,
+            desc: "Segmentos proporcionales entre paralelas."
+        },
+        {
+            q: "27. Un polígono de 5 lados se llama:",
+            a: ["Cuadrilátero", "Hexágono", "Pentágono", "Heptágono"],
+            correct: 2,
+            desc: "Penta = 5."
+        },
+        {
+            q: "28. Diagonales desde un vértice en un polígono de n lados:",
+            a: ["n", "n-3", "n-2", "n(n-3)/2"],
+            correct: 1,
+            desc: "No se puede trazar a sí mismo ni a los dos adyacentes."
+        },
+        {
+            q: "29. Total de diagonales en un cuadrado:",
+            a: ["1", "2", "3", "4"],
+            correct: 1,
+            desc: "Fórmula \\( n(n-3)/2 \\) con n=4."
+        },
+        {
+            q: "30. Ángulo central de una circunferencia:",
+            a: ["Mide la mitad del arco", "Mide igual al arco", "Mide el doble del arco", "Siempre es 90°"],
+            correct: 1,
+            desc: "El ángulo central es igual a su arco interceptado."
+        },
+        {
+            q: "31. Ángulo inscrito en una circunferencia:",
+            a: ["Mide la mitad del arco", "Mide igual al arco", "Mide el doble", "Mide 180°"],
+            correct: 0,
+            desc: "Vértice en la circunferencia: mitad del arco."
+        },
+        {
+            q: "32. Suma de ángulos exteriores de un polígono:",
+            a: ["180°", "360°", "540°", "Variable"],
+            correct: 1,
+            desc: "Para todo polígono convexo es 360°."
+        },
+        {
+            q: "33. Recta que corta a la circunferencia en dos puntos:",
+            a: ["Tangente", "Secante", "Radio", "Diámetro"],
+            correct: 1,
+            desc: "La tangente toca en uno, la secante corta en dos."
+        },
+        {
+            q: "34. Triángulo con dos lados iguales:",
+            a: ["Equilátero", "Escaleno", "Isósceles", "Rectángulo"],
+            correct: 2,
+            desc: "Definición de isósceles."
+        },
+        {
+            q: "35. ¿Cuánto mide cada ángulo de un triángulo equilátero?",
+            a: ["45°", "60°", "90°", "30°"],
+            correct: 1,
+            desc: "180° dividido entre 3 lados iguales."
+        },
+        {
+            q: "36. Hipotenusa es:",
+            a: ["Lado menor", "Cateto adyacente", "Lado opuesto al ángulo recto", "Altura"],
+            correct: 2,
+            desc: "El lado más largo en un triángulo rectángulo."
+        },
+        {
+            q: "37. Fórmula del área de un triángulo:",
+            a: ["\\( bh \\)", "\\( bh/2 \\)", "\\( b+h \\)", "\\( b^2+h^2 \\)"],
+            correct: 1,
+            desc: "Base por altura sobre dos."
+        },
+        {
+            q: "38. Valor de \\( \\pi \\) (aprox):",
+            a: ["3.1416", "2.7182", "1.4142", "1.6180"],
+            correct: 0,
+            desc: "Constante círculo."
+        },
+        {
+            q: "39. Dos ángulos opuestos por el vértice miden \\( 3x \\) y \\( 60^\\circ \\). Halla x:",
+            a: ["10", "20", "30", "60"],
+            correct: 1,
+            desc: "Son iguales: \\( 3x = 60 \\implies x=20 \\)."
+        },
+        {
+            q: "40. Polígono regular significa:",
+            a: ["Lados iguales y ángulos iguales", "Solo lados iguales", "Solo ángulos iguales", "Cualquier polígono"],
+            correct: 0,
+            desc: "Equilátero y equiángulo."
+        },
+        {
+            q: "41. Ortocentro es intersección de:",
+            a: ["Medianas", "Mediatrices", "Alturas", "Bisectrices"],
+            correct: 2,
+            desc: "Definición de punto notable."
+        },
+        {
+            q: "42. Teorema de Pitágoras:",
+            a: ["\\( a+b=c \\)", "\\( c^2 = a^2+b^2 \\)", "\\( c = a^2+b^2 \\)", "\\( a^2=c^2+b^2 \\)"],
+            correct: 1,
+            desc: "Suma de cuadrados de catetos = cuadrado hipotenusa."
+        },
+        {
+            q: "43. Línea que une dos puntos de la circunferencia sin pasar por el centro (necesariamente):",
+            a: ["Radio", "Diámetro", "Cuerda", "Tangente"],
+            correct: 2,
+            desc: "El diámetro es una cuerda especial, pero la definición general es cuerda."
+        },
+        {
+            q: "44. Un triángulo escaleno tiene:",
+            a: ["3 lados iguales", "2 lados iguales", "0 lados iguales", "Un ángulo recto"],
+            correct: 2,
+            desc: "Todos sus lados son diferentes."
+        },
+        {
+            q: "45. Suma de ángulos interiores de un hexágono:",
+            a: ["360°", "540°", "720°", "180°"],
+            correct: 2,
+            desc: "\\( 180(6-2) = 180(4) = 720 \\)."
+        },
+        {
+            q: "46. Ángulos alternos internos entre paralelas son:",
+            a: ["Iguales", "Suplementarios", "Complementarios", "Diferentes"],
+            correct: 0,
+            desc: "Teorema de paralelas."
+        },
+        {
+            q: "47. Apotema es:",
+            a: ["Radio del círculo", "Distancia del centro al punto medio del lado", "Diagonal", "Lado"],
+            correct: 1,
+            desc: "Usado para calcular áreas de polígonos regulares."
+        },
+        {
+            q: "48. Si un triángulo tiene lados 3, 4 y 5, es:",
+            a: ["Acutángulo", "Obtusángulo", "Rectángulo", "Equilátero"],
+            correct: 2,
+            desc: "Cumple Pitágoras \\( 3^2+4^2=5^2 \\)."
+        },
+        {
+            q: "49. Nombre del polígono de 20 lados:",
+            a: ["Dodecágono", "Icoságono", "Decágono", "Endecágono"],
+            correct: 1,
+            desc: "Icosa = 20."
+        },
+        {
+            q: "50. Un ángulo llano mide:",
+            a: ["90°", "180°", "360°", "45°"],
+            correct: 1,
+            desc: "Media vuelta."
+        },
+        {
+            q: "51. ¿Qué es un 'Corolario'?",
+            a: ["Una verdad evidente", "Una proposición deducida directamente de un teorema", "Un problema sin solución", "Una definición"],
+            correct: 1,
+            desc: "Consecuencia inmediata de un teorema demostrado."
+        },
+        {
+            q: "52. Área de un círculo:",
+            a: ["\\( \\pi r^2 \\)", "\\( 2\\pi r \\)", "\\( \\pi d \\)", "\\( \\pi r \\)"],
+            correct: 0,
+            desc: "Radio al cuadrado por pi."
+        },
+        {
+            q: "53. Perímetro de un círculo (longitud):",
+            a: ["\\( \\pi r^2 \\)", "\\( 2\\pi r \\)", "\\( r^2 \\)", "\\( 2r \\)"],
+            correct: 1,
+            desc: "Dos pi por radio o Pi por diámetro."
+        },
+        {
+            q: "54. Ángulos conjugados internos entre paralelas:",
+            a: ["Suman 180° (Suplementarios)", "Son iguales", "Suman 90°", "Suman 360°"],
+            correct: 0,
+            desc: "Están del mismo lado de la transversal, suman 180."
+        },
+        {
+            q: "55. ¿Cuántas mediatrices tiene un triángulo?",
+            a: ["1", "2", "3", "Infinita"],
+            correct: 2,
+            desc: "Una por cada lado."
+        },
+        {
+            q: "56. El baricentro divide a la mediana en razón:",
+            a: ["1:1", "2:1", "3:1", "4:1"],
+            correct: 1,
+            desc: "Propiedad física del centro de gravedad."
+        },
+        {
+            q: "57. Desigualdad triangular: La suma de dos lados debe ser...",
+            a: ["Menor al tercero", "Igual al tercero", "Mayor al tercero", "No importa"],
+            correct: 2,
+            desc: "Si no, el triángulo no cierra."
+        },
+        {
+            q: "58. Ángulo exterior de un triángulo es igual a:",
+            a: ["Suma de los interiores no adyacentes", "180°", "El adyacente", "360°"],
+            correct: 0,
+            desc: "Teorema del ángulo exterior."
+        },
+        {
+            q: "59. Un rombo tiene:",
+            a: ["4 lados iguales", "4 ángulos rectos", "Solo 2 lados paralelos", "Diagonales iguales"],
+            correct: 0,
+            desc: "Definición de rombo (equilátero, no necesariamente equiángulo)."
+        },
+        {
+            q: "60. Lugar geométrico de puntos que equidistan de uno fijo:",
+            a: ["Recta", "Parábola", "Circunferencia", "Elipse"],
+            correct: 2,
+            desc: "Definición formal de circunferencia."
+        },
+
+        // --- UNIDAD 3: TRIGONOMETRÍA (61-100) ---
+        {
+            q: "61. Razón Seno:",
+            a: ["Opuesto/Hipotenusa", "Adyacente/Hipotenusa", "Opuesto/Adyacente", "Hipotenusa/Opuesto"],
+            correct: 0,
+            desc: "SOH."
+        },
+        {
+            q: "62. Razón Coseno:",
+            a: ["Opuesto/Hipotenusa", "Adyacente/Hipotenusa", "Opuesto/Adyacente", "Hipotenusa/Adyacente"],
+            correct: 1,
+            desc: "CAH."
+        },
+        {
+            q: "63. Razón Tangente:",
+            a: ["Opuesto/Adyacente", "Adyacente/Opuesto", "Hipotenusa/Opuesto", "Seno/Coseno"],
+            correct: 0,
+            desc: "TOA."
+        },
+        {
+            q: "64. Recíproca del Coseno:",
+            a: ["Seno", "Secante", "Cosecante", "Tangente"],
+            correct: 1,
+            desc: "Secante = 1/Cos."
+        },
+        {
+            q: "65. Recíproca de la Tangente:",
+            a: ["Cotangente", "Secante", "Seno", "Coseno"],
+            correct: 0,
+            desc: "Cot = 1/Tan."
+        },
+        {
+            q: "66. \\( \\sin^2 x + \\cos^2 x = ? \\)",
+            a: ["0", "1", "-1", "2"],
+            correct: 1,
+            desc: "Identidad Pitagórica."
+        },
+        {
+            q: "67. \\( \\tan x \\) es igual a:",
+            a: ["\\( \\sin x / \\cos x \\)", "\\( \\cos x / \\sin x \\)", "\\( 1 / \\sin x \\)", "\\( 1 / \\cos x \\)"],
+            correct: 0,
+            desc: "Identidad de cociente."
+        },
+        {
+            q: "68. Valor de \\( \\sin(30^\\circ) \\):",
+            a: ["0.5", "1", "\\( \\sqrt{3}/2 \\)", "0"],
+            correct: 0,
+            desc: "Valor notable."
+        },
+        {
+            q: "69. Valor de \\( \\cos(60^\\circ) \\):",
+            a: ["0.5", "1", "\\( \\sqrt{3}/2 \\)", "0"],
+            correct: 0,
+            desc: "Cofunción de sen(30), vale lo mismo."
+        },
+        {
+            q: "70. Valor de \\( \\tan(45^\\circ) \\):",
+            a: ["1", "0", "Undefined", "\\( \\sqrt{2} \\)"],
+            correct: 0,
+            desc: "Catetos iguales, división da 1."
+        },
+        {
+            q: "71. Ley de Senos:",
+            a: ["\\( a/\\sin A = b/\\sin B \\)", "\\( a^2 = b^2+c^2 \\)", "\\( \\sin A = \\cos B \\)", "\\( a+b=c \\)"],
+            correct: 0,
+            desc: "Proporcionalidad entre lados y senos opuestos."
+        },
+        {
+            q: "72. Ley de Cosenos (para lado c):",
+            a: ["\\( c^2 = a^2+b^2-2ab\\cos C \\)", "\\( c^2 = a^2+b^2+2ab\\cos C \\)", "\\( c^2 = a^2-b^2 \\)", "\\( c = a\\cos C \\)"],
+            correct: 0,
+            desc: "Generalización de Pitágoras."
+        },
+        {
+            q: "73. Ángulo de \\( \\pi \\) radianes equivale a:",
+            a: ["90°", "180°", "360°", "270°"],
+            correct: 1,
+            desc: "Media vuelta."
+        },
+        {
+            q: "74. Ángulo de \\( \\pi/2 \\) radianes:",
+            a: ["90°", "45°", "180°", "60°"],
+            correct: 0,
+            desc: "Cuarto de vuelta."
+        },
+        {
+            q: "75. Signo del Seno en II Cuadrante:",
+            a: ["Positivo", "Negativo", "Cero", "Indefinido"],
+            correct: 0,
+            desc: "Seno (y) es positivo arriba."
+        },
+        {
+            q: "76. Signo del Coseno en II Cuadrante:",
+            a: ["Positivo", "Negativo", "Cero", "Indefinido"],
+            correct: 1,
+            desc: "Coseno (x) es negativo a la izquierda."
+        },
+        {
+            q: "77. Identidad \\( 1 + \\tan^2 x \\):",
+            a: ["\\( \\sec^2 x \\)", "\\( \\csc^2 x \\)", "\\( \\sin^2 x \\)", "\\( \\cos^2 x \\)"],
+            correct: 0,
+            desc: "Identidad pitagórica derivada."
+        },
+        {
+            q: "78. \\( \\sin(90^\\circ) \\):",
+            a: ["0", "1", "-1", "0.5"],
+            correct: 1,
+            desc: "Punto más alto del círculo unitario."
+        },
+        {
+            q: "79. \\( \\cos(180^\\circ) \\):",
+            a: ["0", "1", "-1", "0.5"],
+            correct: 2,
+            desc: "Extremo izquierdo del círculo unitario."
+        },
+        {
+            q: "80. Periodo de la función \\( y = \\sin x \\):",
+            a: ["\\( \\pi \\)", "\\( 2\\pi \\)", "\\( \\pi/2 \\)", "\\( 4\\pi \\)"],
+            correct: 1,
+            desc: "Se repite cada 360 grados."
+        },
+        {
+            q: "81. Si \\( \\tan \\theta > 0 \\) y \\( \\cos \\theta < 0 \\), ¿en qué cuadrante está?",
+            a: ["I", "II", "III", "IV"],
+            correct: 2,
+            desc: "Tangente positiva en I y III. Coseno negativo en II y III. Intersección: III."
+        },
+        {
+            q: "82. Convertir 45° a radianes:",
+            a: ["\\( \\pi/2 \\)", "\\( \\pi/3 \\)", "\\( \\pi/4 \\)", "\\( \\pi/6 \\)"],
+            correct: 2,
+            desc: "180/4 = 45."
+        },
+        {
+            q: "83. Ángulo de depresión:",
+            a: ["Desde la horizontal hacia abajo", "Desde la horizontal hacia arriba", "Vertical", "Oblicuo"],
+            correct: 0,
+            desc: "Definición de ángulo de depresión."
+        },
+        {
+            q: "84. Solución de \\( \\cos x = 0 \\) en \\( [0, 360^\\circ] \\):",
+            a: ["0 y 180", "90 y 270", "45 y 225", "0 y 360"],
+            correct: 1,
+            desc: "Coseno es cero en el eje Y."
+        },
+        {
+            q: "85. Triángulo oblicuángulo:",
+            a: ["No tiene ángulo recto", "Tiene un ángulo recto", "Es equilátero", "Es isósceles"],
+            correct: 0,
+            desc: "Se resuelve con Ley de Senos/Cosenos."
+        },
+        {
+            q: "86. Si hipotenusa=10 y opuesto=5, el ángulo es:",
+            a: ["30°", "45°", "60°", "90°"],
+            correct: 0,
+            desc: "\\( \\sin x = 5/10 = 0.5 \\implies x=30^\\circ \\)."
+        },
+        {
+            q: "87. \\( \\sec x \\) es indefinida cuando:",
+            a: ["\\( \\cos x = 0 \\)", "\\( \\sin x = 0 \\)", "\\( \\tan x = 0 \\)", "Nunca"],
+            correct: 0,
+            desc: "División por cero (1/cos)."
+        },
+        {
+            q: "88. Rango de la función \\( y = \\sin x \\):",
+            a: ["\\( [-1, 1] \\)", "\\( (-\\infty, \\infty) \\)", "\\( [0, 1] \\)", "\\( [-2, 2] \\)"],
+            correct: 0,
+            desc: "Oscila entre -1 y 1."
+        },
+        {
+            q: "89. \\( \\cot(45^\\circ) \\):",
+            a: ["1", "0", "-1", "Undefined"],
+            correct: 0,
+            desc: "Recíproco de tan(45)=1."
+        },
+        {
+            q: "90. Complemento de 30°:",
+            a: ["60°", "150°", "330°", "15°"],
+            correct: 0,
+            desc: "90 - 30 = 60."
+        },
+        {
+            q: "91. Suplemento de 120°:",
+            a: ["60°", "240°", "300°", "90°"],
+            correct: 0,
+            desc: "180 - 120 = 60."
+        },
+        {
+            q: "92. \\( \\sin(A-B) = \\):",
+            a: ["\\( \\sin A \\cos B - \\cos A \\sin B \\)", "\\( \\sin A - \\sin B \\)", "\\( \\cos A \\cos B \\)", "\\( \\sin A \\cos B + \\cos A \\sin B \\)"],
+            correct: 0,
+            desc: "Fórmula de diferencia de ángulos."
+        },
+        {
+            q: "93. Cofunción: \\( \\sin(90^\\circ - x) = \\)",
+            a: ["\\( \\cos x \\)", "\\( \\sin x \\)", "\\( -\\cos x \\)", "\\( \\tan x \\)"],
+            correct: 0,
+            desc: "Identidad de cofunción."
+        },
+        {
+            q: "94. En un triángulo rectángulo, si los catetos son 3 y 4, la hipotenusa es:",
+            a: ["5", "6", "7", "8"],
+            correct: 0,
+            desc: "3-4-5 es un trío pitagórico."
+        },
+        {
+            q: "95. ¿Para qué sirve la hipsometría?",
+            a: ["Medir alturas con trigonometría", "Medir presión", "Medir temperatura", "Medir áreas"],
+            correct: 0,
+            desc: "Aplicación práctica de ángulos de elevación."
+        },
+        {
+            q: "96. Si \\( \\sin x = 3/5 \\), ¿cuánto es \\( \\csc x \\)?",
+            a: ["5/3", "3/4", "4/5", "5/4"],
+            correct: 0,
+            desc: "Recíproco del seno."
+        },
+        {
+            q: "97. \\( \\cos(2\\pi) \\) es igual a:",
+            a: ["1", "0", "-1", "0.5"],
+            correct: 0,
+            desc: "Vuelta completa, mismo que cos(0)."
+        },
+        {
+            q: "98. La función Coseno es par o impar:",
+            a: ["Par (simétrica eje Y)", "Impar (simétrica origen)", "Ninguna", "Ambas"],
+            correct: 0,
+            desc: "\\( \\cos(-x) = \\cos(x) \\)."
+        },
+        {
+            q: "99. La función Seno es par o impar:",
+            a: ["Impar", "Par", "Ninguna", "Ambas"],
+            correct: 0,
+            desc: "\\( \\sin(-x) = -\\sin(x) \\)."
+        },
+        {
+            q: "100. Valor máximo de \\( y = 3\\sin x \\):",
+            a: ["3", "1", "0", "Infinity"],
+            correct: 0,
+            desc: "Amplitud es 3."
+        }
+    ];
+
+    /* LÓGICA DEL EXAMEN */
+    
+    function loadQuestions() {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = ''; 
+
+        quizData.forEach((item, index) => {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            
+            const title = document.createElement('span');
+            title.className = 'question-title';
+            title.innerHTML = item.q; // Pregunta con LaTeX
+            block.appendChild(title);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            item.a.forEach((opt, i) => {
+                const label = document.createElement('label');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'q' + index;
+                radio.value = i;
+                
+                // Evento para actualizar barra de progreso al contestar
+                radio.addEventListener('change', updateProgress);
+
+                label.appendChild(radio);
+                const textSpan = document.createElement('span');
+                textSpan.innerHTML = opt; // Opción con LaTeX
+                label.appendChild(textSpan);
+                
+                optionsDiv.appendChild(label);
+            });
+
+            block.appendChild(optionsDiv);
+
+            const explanation = document.createElement('div');
+            explanation.id = 'expl-' + index;
+            explanation.className = 'explanation';
+            block.appendChild(explanation);
+
+            container.appendChild(block);
+        });
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function updateProgress() {
+        const total = quizData.length;
+        let answered = 0;
+        for (let i = 0; i < total; i++) {
+            const radios = document.getElementsByName('q' + i);
+            for (let r of radios) {
+                if (r.checked) {
+                    answered++;
+                    break;
+                }
+            }
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+    }
+
+    function calculateScore() {
+        let score = 0;
+        let unanswered = 0;
+
+        quizData.forEach((item, index) => {
+            const radios = document.getElementsByName('q' + index);
+            let selected = -1;
+            let explDiv = document.getElementById('expl-' + index);
+            
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    selected = parseInt(radios[i].value);
+                    break;
+                }
+            }
+
+            explDiv.style.display = 'block';
+            
+            if (selected === -1) {
+                unanswered++;
+                explDiv.innerHTML = '<span style="color:orange; font-weight:bold;">No contestada.</span> Respuesta: ' + item.a[item.correct];
+                explDiv.style.borderLeft = "5px solid orange";
+            } else if (selected === item.correct) {
+                score++;
+                explDiv.innerHTML = '<span class="correct-text">¡Correcto!</span> ' + item.desc;
+                explDiv.style.borderLeft = "5px solid var(--correct-color)";
+            } else {
+                explDiv.innerHTML = '<span class="incorrect-text">Incorrecto.</span> Respuesta correcta: ' + item.a[item.correct] + '. <br><strong>Nota:</strong> ' + item.desc;
+                explDiv.style.borderLeft = "5px solid var(--incorrect-color)";
+            }
+        });
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `Resultado Final: <strong>${score}</strong> / 100 <br> (${score}%)`;
+        
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+
+        resultDiv.scrollIntoView({behavior: "smooth"});
+    }
+
+    // Funcionalidad del botón Volver Arriba
+    window.onscroll = function() {scrollFunction()};
+    function scrollFunction() {
+        const btn = document.getElementById("scrollTopBtn");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    }
+    function topFunction() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    window.onload = loadQuestions;
+</script>
+
+</body>
+</html>

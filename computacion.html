@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computación Básica II</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #217346; /* Verde Excel */
+            --secondary-color: #1d4f91; /* Azul Institucional/Word/Web */
+            --bg-color: #f3f2f1;
+            --card-bg: #ffffff;
+            --text-main: #252423;
+            --success: #107c10;
+            --error: #a80000;
+            --warning: #d83b01;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        /* Barra de Progreso */
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--text-main); margin: 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .header h2 { color: var(--primary-color); margin: 10px 0 0; font-weight: 600; font-size: 1.2rem; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; display: block; }
+        .code-snippet {
+            background-color: #f4f4f4;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: #d63384;
+            font-size: 0.95em;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #e1dfdd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background: #eff6fc;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #dff6dd; border-left: 4px solid var(--success); color: var(--success); }
+        .feedback.incorrect { background: #fde7e9; border-left: 4px solid var(--error); color: var(--error); }
+        .feedback.unanswered { background: #fff4ce; border-left: 4px solid var(--warning); color: #794500; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(33, 115, 70, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #185c37; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 30px;
+            display: none;
+            border-top: 6px solid var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Computación Básica II</h1>
+    <p>Excel • Fórmulas y Funciones • Bases de Datos • Introducción Web</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS - BASADO EN GUÍA COMPUTACIÓN BÁSICA II
+    const questions = [
+        // --- UNIDAD 1: INTERFAZ Y CONCEPTOS BÁSICOS DE EXCEL (1-25) ---
+        { q: "1. Es el archivo de trabajo de Excel que puede contener una o más hojas de cálculo:", a: ["Libro de trabajo", "Documento", "Base de datos", "Presentación"], c: 0, e: "La extensión por defecto es .xlsx." },
+        { q: "2. Es la intersección de una fila y una columna:", a: ["Rango", "Celda", "Etiqueta", "Función"], c: 1, e: "Unidad básica de almacenamiento en Excel (ej. A1)." },
+        { q: "3. Elemento de la interfaz que muestra el contenido real de la celda activa:", a: ["Cuadro de nombres", "Barra de estado", "Barra de fórmulas", "Cinta de opciones"], c: 2, e: "Permite ver y editar fórmulas o datos." },
+        { q: "4. Referencia que identifica de manera única a una celda (ej. B5):", a: ["Dirección de celda", "Valor", "Etiqueta", "Rango"], c: 0, e: "Formada por la letra de la columna y el número de la fila." },
+        { q: "5. Cantidad aproximada de filas en una hoja de Excel (versiones 2007+):", a: ["65,536", "1,048,576", "16,384", "Unlimited"], c: 1, e: "Aumentó significativamente desde la versión 2003." },
+        { q: "6. Cantidad aproximada de columnas en una hoja de Excel (versiones 2007+):", a: ["256 (IV)", "16,384 (XFD)", "10,000", "512"], c: 1, e: "Llega hasta la combinación XFD." },
+        { q: "7. Símbolo obligatorio para iniciar cualquier fórmula en Excel:", a: ["+", "-", "=", "/"], c: 2, e: "Indica a Excel que lo siguiente es una operación, no texto." },
+        { q: "8. Conjunto de celdas seleccionadas (adyacentes o no) que se tratan como unidad:", a: ["Matriz", "Rango", "Bloque", "Grupo"], c: 1, e: "Se denota usualmente con dos puntos (ej. A1:B10)." },
+        { q: "9. Elemento que indica en qué celda estamos trabajando actualmente (borde grueso):", a: ["Celda activa", "Celda pasiva", "Puntero del ratón", "Barra de título"], c: 0, e: "Es donde se introducirán los datos al escribir." },
+        { q: "10. Cuadro que muestra la dirección de la celda activa (ej. A1):", a: ["Barra de fórmulas", "Cuadro de nombres", "Barra de título", "Etiquetas de hoja"], c: 1, e: "Situado a la izquierda de la barra de fórmulas." },
+        { q: "11. Ficha o Pestaña que contiene los comandos para guardar, imprimir o abrir (Botón de Office):", a: ["Inicio", "Archivo", "Insertar", "Vista"], c: 1, e: "En versiones 2007 era el Botón Office, ahora es Archivo." },
+        { q: "12. Teclas rápidas para 'Guardar' un libro en español:", a: ["Ctrl + G", "Ctrl + S", "Ctrl + P", "Ctrl + A"], c: 0, e: "Ctrl + G (Guardar). En inglés es Ctrl + S (Save)." },
+        { q: "13. ¿Qué representa la referencia <span class='code-snippet'>$A$1</span>?", a: ["Referencia Relativa", "Referencia Absoluta", "Referencia Mixta", "Referencia Circular"], c: 1, e: "El signo $ fija tanto la columna como la fila al copiar." },
+        { q: "14. ¿Qué representa la referencia <span class='code-snippet'>A1</span> (sin signos)?", a: ["Referencia Relativa", "Referencia Absoluta", "Referencia Mixta", "Referencia Externa"], c: 0, e: "Cambia si se copia a otra celda." },
+        { q: "15. Extensión predeterminada de los archivos de Excel 2007 en adelante:", a: [".xls", ".xml", ".xlsx", ".doc"], c: 2, e: "Formato basado en XML, sin macros." },
+        { q: "16. Cursor que aparece entre encabezados de columna para cambiar el ancho:", a: ["Cruz blanca gruesa", "Flecha negra hacia abajo", "Línea con doble flecha", "Cruz delgada negra"], c: 2, e: "Permite ajustar el tamaño arrastrando." },
+        { q: "17. Cursor 'Cruz negra delgada' en la esquina inferior derecha de la celda sirve para:", a: ["Seleccionar", "Mover celda", "Autorellenar / Copiar fórmula", "Cambiar tamaño"], c: 2, e: "Funcionalidad de controlador de relleno." },
+        { q: "18. Para seleccionar celdas no adyacentes (separadas), se mantiene presionada la tecla:", a: ["Shift", "Ctrl", "Alt", "Tab"], c: 1, e: "Control permite selección múltiple discontinua." },
+        { q: "19. Tecla para editar el contenido de una celda sin borrarlo:", a: ["F1", "F2", "F4", "F5"], c: 1, e: "Activa el modo de edición en la celda." },
+        { q: "20. Comando para combinar varias celdas en una sola y centrar el texto:", a: ["Ajustar texto", "Combinar y centrar", "Agrupar", "Concatenar"], c: 1, e: "Común para títulos en tablas." },
+        { q: "21. Si el contenido numérico es más ancho que la columna, Excel muestra:", a: ["######", "#ERROR", "??????", "El número cortado"], c: 0, e: "Indica que se debe ampliar la columna." },
+        { q: "22. Barra que permite hacer Zoom y ver vistas de diseño de página:", a: ["Barra de estado", "Barra de fórmulas", "Cinta de opciones", "Barra de acceso rápido"], c: 0, e: "Ubicada en la parte inferior derecha." },
+        { q: "23. Función de la tecla F4 al editar una fórmula:", a: ["Cierra Excel", "Calcula", "Cicla entre referencias relativas y absolutas ($)", "Ayuda"], c: 2, e: "Añade automáticamente los signos $." },
+        { q: "24. Organización horizontal de celdas identificada por números:", a: ["Columna", "Fila", "Rango", "Hoja"], c: 1, e: "Las filas se numeran (1, 2, 3...)." },
+        { q: "25. Organización vertical de celdas identificada por letras:", a: ["Columna", "Fila", "Celda", "Matriz"], c: 0, e: "Las columnas usan letras (A, B, C...)." },
+
+        // --- UNIDAD 2: OPERADORES Y FÓRMULAS (26-50) ---
+        { q: "26. Operador aritmético para la exponenciación (potencia):", a: ["*", "/", "^", "%"], c: 2, e: "El acento circunflejo (^) eleva un número a una potencia." },
+        { q: "27. Operador de texto utilizado para concatenar (unir) cadenas:", a: ["+", "&", "$", "#"], c: 1, e: "El Ampersand (&) une textos (ej. 'Hola' & ' Mundo')." },
+        { q: "28. ¿Cuál es el resultado de <span class='code-snippet'>=10/2*5</span> siguiendo la jerarquía?", a: ["1", "25", "10", "Error"], c: 1, e: "Misma jerarquía (Mult/Div), se evalúa de izquierda a derecha: 10/2=5, luego 5*5=25." },
+        { q: "29. ¿Cuál es el resultado de <span class='code-snippet'>=10/(2*5)</span>?", a: ["1", "25", "10", "5"], c: 0, e: "Los paréntesis rompen la jerarquía: 2*5=10, luego 10/10=1." },
+        { q: "30. Operador de comparación 'Diferente de':", a: ["!=", "<>", "><", "NOT"], c: 1, e: "Símbolo menor que seguido de mayor que (<>)." },
+        { q: "31. Operador de referencia que indica un rango (de... hasta...):", a: [", (coma)", "; (punto y coma)", ": (dos puntos)", "Espacio"], c: 2, e: "Ejemplo: A1:A10." },
+        { q: "32. Operador de referencia que indica unión de celdas no contiguas:", a: [": (dos puntos)", ", (coma) o ; (punto y coma)", "Espacio", "&"], c: 1, e: "Depende de la configuración regional, suele ser coma o punto y coma." },
+        { q: "33. Operador de referencia que indica intersección de rangos:", a: ["Espacio", ": (dos puntos)", ", (coma)", "-"], c: 0, e: "El espacio en blanco busca celdas comunes entre dos rangos." },
+        { q: "34. ¿Qué prioridad tiene la exponenciación frente a la multiplicación?", a: ["Menor", "Igual", "Mayor", "No son comparables"], c: 2, e: "Potencias se calculan antes que multiplicaciones." },
+        { q: "35. Resultado de <span class='code-snippet'>=2+3*4</span>:", a: ["20", "14", "24", "10"], c: 1, e: "Multiplicación primero: 3*4=12, luego 2+12=14." },
+        { q: "36. Significado del error <span class='code-snippet'>#¡DIV/0!</span>:", a: ["Referencia inválida", "División por cero o celda vacía", "Nombre desconocido", "Valor numérico inválido"], c: 1, e: "Matemáticamente imposible dividir entre cero." },
+        { q: "37. Significado del error <span class='code-snippet'>#¿NOMBRE?</span>:", a: ["Columna muy estrecha", "Excel no reconoce el texto (fórmula mal escrita)", "Referencia nula", "Número muy grande"], c: 1, e: "Suele pasar al escribir mal el nombre de una función (ej. =SUMARR())." },
+        { q: "38. Significado del error <span class='code-snippet'>#¡REF!</span>:", a: ["Referencia de celda no válida", "División por cero", "Dato ilegible", "Error de valor"], c: 0, e: "Ocurre al eliminar celdas que eran parte de una fórmula." },
+        { q: "39. Significado del error <span class='code-snippet'>#¡VALOR!</span>:", a: ["Operación matemática con texto", "División por cero", "Fórmula vacía", "Referencia circular"], c: 0, e: "Intentar sumar una palabra con un número, por ejemplo." },
+        { q: "40. Significado del error <span class='code-snippet'>#¡NULO!</span>:", a: ["Intersección de rangos que no se tocan", "Valor cero", "Celda vacía", "Texto vacío"], c: 0, e: "Uso incorrecto del operador de espacio o rangos sin intersección." },
+        { q: "41. Fórmula correcta para sumar el rango A1 hasta A10:", a: ["=SUMA(A1-A10)", "=SUMA(A1:A10)", "=A1+A10", "=TOTAL(A1:A10)"], c: 1, e: "Uso correcto de la función SUMA y el operador de rango (:)." },
+        { q: "42. Fórmula para calcular el promedio de A1, A2 y A3:", a: ["=MEDIA(A1:A3)", "=PROMEDIO(A1:A3)", "=A1+A2+A3/3", "=SUMA(A1:A3)/2"], c: 1, e: "La función estándar en español es PROMEDIO." },
+        { q: "43. Símbolo para porcentaje (divide entre 100):", a: ["%", "/", "^", "*"], c: 0, e: "Convierte 50 en 0.5 (50%)." },
+        { q: "44. Jerarquía: ¿Qué se ejecuta primero, Paréntesis o Porcentaje?", a: ["Porcentaje", "Paréntesis", "Igual", "Ninguno"], c: 1, e: "Los paréntesis siempre agrupan y fuerzan la prioridad máxima." },
+        { q: "45. Resultado de <span class='code-snippet'>=4^2</span>:", a: ["8", "16", "6", "2"], c: 1, e: "Cuatro elevado al cuadrado (4*4)." },
+        { q: "46. Para unir el texto de A1 ('Juan') y B1 ('Pérez') con un espacio:", a: ["=A1+B1", "=A1 & ' ' & B1", "=A1 : B1", "=CONCAT(A1,B1)"], c: 1, e: "El espacio debe ir entre comillas para ser texto." },
+        { q: "47. Operador lógico que devuelve VERDADERO si ambas condiciones se cumplen:", a: ["O", "Y", "SI", "NO"], c: 1, e: "Función Y (AND)." },
+        { q: "48. Operador lógico que devuelve VERDADERO si al menos una condición se cumple:", a: ["O", "Y", "SI", "NO"], c: 0, e: "Función O (OR)." },
+        { q: "49. Si A1=5 y B1=10, la fórmula <span class='code-snippet'>=A1>B1</span> devuelve:", a: ["VERDADERO", "FALSO", "5", "10"], c: 1, e: "5 no es mayor que 10." },
+        { q: "50. Característica de una Referencia Mixta (ej. $A1):", a: ["Fija columna y fila", "Fija solo la columna", "Fija solo la fila", "No fija nada"], c: 1, e: "El signo $ está solo antes de la letra (columna)." },
+
+        // --- UNIDAD 3: FUNCIONES Y CATEGORÍAS (51-75) ---
+        { q: "51. Categoría de la función <span class='code-snippet'>=PAGO()</span>:", a: ["Lógica", "Financiera", "Estadística", "Texto"], c: 1, e: "Calcula el pago de un préstamo." },
+        { q: "52. Categoría de la función <span class='code-snippet'>=AHORA()</span>:", a: ["Fecha y hora", "Lógica", "Matemática", "Información"], c: 0, e: "Devuelve fecha y hora actuales." },
+        { q: "53. Categoría de la función <span class='code-snippet'>=SI()</span>:", a: ["Lógica", "Texto", "Financiera", "Búsqueda"], c: 0, e: "Evalúa una condición y devuelve un valor si es verdadero o falso." },
+        { q: "54. Categoría de la función <span class='code-snippet'>=SUMAR.SI()</span>:", a: ["Matemáticas y trigonométricas", "Lógica", "Texto", "Fecha"], c: 0, e: "Suma celdas que cumplen un criterio." },
+        { q: "55. Categoría de la función <span class='code-snippet'>=CONTAR()</span>:", a: ["Estadística", "Matemática", "Financiera", "Lógica"], c: 0, e: "Cuenta celdas con números." },
+        { q: "56. Categoría de la función <span class='code-snippet'>=BUSCARV()</span>:", a: ["Búsqueda y referencia", "Base de datos", "Lógica", "Texto"], c: 0, e: "Busca un valor en la primera columna de un rango." },
+        { q: "57. Categoría de la función <span class='code-snippet'>=MAYUSC()</span>:", a: ["Texto", "Lógica", "Información", "Matemática"], c: 0, e: "Convierte texto a mayúsculas." },
+        { q: "58. Función que devuelve el valor máximo de un rango:", a: ["=MAX()", "=MAYOR()", "=ALTO()", "=TECHO()"], c: 0, e: "Devuelve el valor numérico más alto." },
+        { q: "59. Función que devuelve el valor mínimo de un rango:", a: ["=MIN()", "=MENOR()", "=BAJO()", "=PISO()"], c: 0, e: "Devuelve el valor numérico más bajo." },
+        { q: "60. Función que calcula la raíz cuadrada de un número:", a: ["=RAIZ()", "=CUADRADO()", "=POTENCIA()", "=R()"], c: 0, e: "Ej. =RAIZ(9) devuelve 3." },
+        { q: "61. Función que obtiene el promedio aritmético:", a: ["=PROMEDIO()", "=MEDIA()", "=MEDIANA()", "=MODA()"], c: 0, e: "Suma los valores y divide entre la cantidad." },
+        { q: "62. Sintaxis correcta de la función SI:", a: ["=SI(prueba_lógica; valor_si_verdadero; valor_si_falso)", "=SI(valor_si_verdadero; prueba_lógica)", "=SI(criterio)", "=SI(rango)"], c: 0, e: "Requiere condición, respuesta positiva y respuesta negativa." },
+        { q: "63. Función para unir textos de diferentes celdas:", a: ["=CONCATENAR()", "=UNIR()", "=PEGAR()", "=JUNTO()"], c: 0, e: "Equivalente al operador &." },
+        { q: "64. Función que devuelve la fecha actual:", a: ["=HOY()", "=FECHA()", "=DIA()", "=AHORA()"], c: 0, e: "Solo la fecha, sin la hora." },
+        { q: "65. Función para contar celdas que no están vacías:", a: ["=CONTARA()", "=CONTAR()", "=CONTAR.SI()", "=LLENAS()"], c: 0, e: "Cuenta números, texto, errores, todo menos vacías." },
+        { q: "66. Función trigonométrica para obtener el Seno:", a: ["=SEN()", "=SENO()", "=SIN()", "=COS()"], c: 0, e: "En Excel español es SEN." },
+        { q: "67. Función que convierte grados a radianes:", a: ["=RADIANES()", "=GRADOS()", "=PI()", "=CONVERTIR()"], c: 0, e: "Necesario porque Excel calcula trigonometría en radianes." },
+        { q: "68. Función <span class='code-snippet'>=PI()</span> devuelve:", a: ["3.14159...", "3.14", "Error", "El símbolo"], c: 0, e: "El valor de Pi con 15 dígitos de precisión." },
+        { q: "69. Argumentos de la función <span class='code-snippet'>=SUMA()</span>:", a: ["Número1, [número2], ...", "Rango, criterio", "Prueba lógica", "Texto"], c: 0, e: "Puede sumar celdas individuales o rangos enteros." },
+        { q: "70. Función de Bases de Datos que suma cumpliendo criterios:", a: ["=BDSUMA()", "=SUMA()", "=TOTAL()", "=AGREGAR()"], c: 0, e: "Suma en una columna de una lista o base de datos." },
+        { q: "71. Función para obtener el residuo de una división:", a: ["=RESIDUO()", "=RESTO()", "=SOBRA()", "=MOD()"], c: 0, e: "Lo que sobra de una división entera." },
+        { q: "72. Función que redondea un número a decimales específicos:", a: ["=REDONDEAR()", "=ENTERO()", "=TRUNCAR()", "=FIX()"], c: 0, e: "Ajusta al decimal más cercano." },
+        { q: "73. Función que elimina los decimales sin redondear:", a: ["=TRUNCAR()", "=REDONDEAR()", "=CORTAR()", "=SINDEC()"], c: 0, e: "Corta el número en el decimal indicado." },
+        { q: "74. Función lógica que invierte el valor (V a F, F a V):", a: ["=NO()", "=SI()", "=Y()", "=INVERSO()"], c: 0, e: "Negación lógica." },
+        { q: "75. Función que busca errores en una celda:", a: ["=ESERROR()", "=HAYERROR()", "=ERROR()", "=BUSCARERROR()"], c: 0, e: "Devuelve VERDADERO si la celda tiene error." },
+
+        // --- UNIDAD 4: BASES DE DATOS Y CONCEPTOS TEÓRICOS (76-90) ---
+        { q: "76. Colección de información organizada para ser buscada y actualizada:", a: ["Base de Datos", "Hoja de cálculo", "Documento", "Presentación"], c: 0, e: "Definición general de BD." },
+        { q: "77. En una BD, la 'Columna' que representa una categoría de datos (ej. Nombre) se llama:", a: ["Campo", "Registro", "Archivo", "Dato"], c: 0, e: "Unidad mínima de información en una tabla." },
+        { q: "78. En una BD, la 'Fila' que contiene toda la información de un elemento se llama:", a: ["Registro", "Campo", "Tabla", "Celda"], c: 0, e: "Conjunto de campos relacionados (ej. todos los datos de un alumno)." },
+        { q: "79. Modelo de BD que organiza datos en estructura de árbol (padre-hijo):", a: ["Jerárquica", "Relacional", "Red", "Plana"], c: 0, e: "Un nodo padre puede tener varios hijos, pero un hijo solo un padre." },
+        { q: "80. Modelo de BD que permite relaciones muchos a muchos (grafos):", a: ["Red", "Jerárquica", "Relacional", "Documental"], c: 0, e: "Evolución del modelo jerárquico." },
+        { q: "81. Modelo de BD más común, basado en Tablas relacionadas:", a: ["Relacional", "Jerárquica", "Red", "Objeto"], c: 0, e: "Usa claves primarias y foráneas para conectar tablas." },
+        { q: "82. BD que almacena datos en diferentes ubicaciones físicas (nodos):", a: ["Distribuida", "Centralizada", "Local", "Personal"], c: 0, e: "Los datos no están en un solo servidor." },
+        { q: "83. BD orientada a documentos y textos completos:", a: ["Documental", "Relacional", "Transaccional", "Jerárquica"], c: 0, e: "Útil para bibliotecas y gestión de conocimiento." },
+        { q: "84. BD diseñada para garantizar la integridad de transacciones (bancos):", a: ["Transaccional", "Multidimensional", "Documental", "Bibliográfica"], c: 0, e: "Garantiza que la operación se complete totalmente o se cancele." },
+        { q: "85. BD usada para análisis de datos complejos (OLAP, cubos):", a: ["Multidimensional", "Relacional", "Plana", "Red"], c: 0, e: "Optimiza consultas complejas de análisis." },
+        { q: "86. BD que almacena objetos como en programación (datos + métodos):", a: ["Orientada a Objetos", "Relacional", "Jerárquica", "Lógica"], c: 0, e: "Integra conceptos de POO en la base de datos." },
+        { q: "87. BD que usa reglas lógicas para deducir nueva información:", a: ["Deductiva", "Inductiva", "Relacional", "Red"], c: 0, e: "Basada en lógica matemática e inferencia." },
+        { q: "88. Conjunto de registros con estructura homogénea:", a: ["Tabla (Archivo)", "Campo", "Dato", "Consulta"], c: 0, e: "Contenedor principal en el modelo relacional." },
+        { q: "89. Proceso de ordenar datos A-Z o 1-10:", a: ["Orden Ascendente", "Orden Descendente", "Filtro", "Consulta"], c: 0, e: "De menor a mayor." },
+        { q: "90. Herramienta para mostrar solo los datos que cumplen un criterio:", a: ["Filtro", "Orden", "Gráfico", "Tabla dinámica"], c: 0, e: "Oculta temporalmente los datos que no interesan." },
+
+        // --- UNIDAD 5: INTRODUCCIÓN A WEB Y GRÁFICOS (91-100) ---
+        { q: "91. Lenguaje estándar para crear páginas web (mencionado en competencias):", a: ["HTML", "Excel", "Pascal", "C++"], c: 0, e: "HyperText Markup Language." },
+        { q: "92. Programa para visualizar páginas web:", a: ["Navegador", "Editor", "Compilador", "Hoja de cálculo"], c: 0, e: "Ej. Chrome, Firefox, Edge." },
+        { q: "93. Gráfico de Excel ideal para mostrar porcentajes de un total:", a: ["Circular (Pastel)", "Columnas", "Líneas", "Dispersión"], c: 0, e: "Muestra partes de un todo." },
+        { q: "94. Gráfico ideal para comparar valores entre categorías:", a: ["Columnas / Barras", "Circular", "Dispersión", "Radial"], c: 0, e: "Barras verticales u horizontales." },
+        { q: "95. Gráfico ideal para mostrar tendencias a lo largo del tiempo:", a: ["Líneas", "Circular", "Anillos", "Superficie"], c: 0, e: "Conecta puntos de datos para ver la evolución." },
+        { q: "96. Texto descriptivo en un gráfico que identifica qué es cada color:", a: ["Leyenda", "Título", "Eje", "Etiqueta"], c: 0, e: "Ayuda a interpretar las series de datos." },
+        { q: "97. Eje horizontal en un gráfico cartesiano:", a: ["Eje X (Categorías)", "Eje Y (Valores)", "Eje Z", "Leyenda"], c: 0, e: "Usualmente muestra las categorías o el tiempo." },
+        { q: "98. Eje vertical en un gráfico cartesiano:", a: ["Eje Y (Valores)", "Eje X", "Eje Z", "Título"], c: 0, e: "Muestra la magnitud de los datos." },
+        { q: "99. Elemento visual que representa un valor en el gráfico:", a: ["Serie de datos", "Leyenda", "Eje", "Título"], c: 0, e: "Puede ser una barra, una línea, un punto, etc." },
+        { q: "100. Pasos básicos para crear un gráfico en Excel:", a: ["Seleccionar datos -> Insertar -> Gráfico", "Inicio -> Gráfico", "Vista -> Gráfico", "Fórmulas -> Gráfico"], c: 0, e: "Primero se eligen los datos, luego se inserta el objeto visual." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            // Pregunta
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            // Opciones
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            // Feedback
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Biología Básica</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Verde Biológico */
+            --secondary-color: #004d40; /* Verde Oscuro/Científico */
+            --bg-color: #f1f8e9;
+            --card-bg: #ffffff;
+            --text-main: #1b5e20;
+            --success: #43a047;
+            --error: #d32f2f;
+            --warning: #fbc02d;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        /* Barra de Progreso */
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #c8e6c9;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--secondary-color); margin: 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .header h2 { color: var(--primary-color); margin: 10px 0 0; font-weight: 600; font-size: 1.2rem; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; display: block; color: #000; }
+        
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #c5e1a5;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background: #dcedc8;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: var(--text-main); }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: #b71c1c; }
+        .feedback.unanswered { background: #fffde7; border-left: 4px solid var(--warning); color: #f57f17; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #1b5e20; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Biología Básica</h1>
+    <p>Célula • Metabolismo • Genética • Ecología</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS DE BIOLOGÍA
+    const questions = [
+        // --- UNIDAD 1: LA CÉLULA (1-30) ---
+        { q: "1. Unidad fundamental, estructural y funcional de todos los seres vivos:", a: ["Átomo", "Célula", "Tejido", "Órgano"], c: 1, e: "Postulado básico de la Teoría Celular." },
+        { q: "2. Científico que acuñó el término 'célula' al observar corcho:", a: ["Robert Hooke", "Anton van Leeuwenhoek", "Louis Pasteur", "Charles Darwin"], c: 0, e: "En 1665 observó celdillas en una lámina de corcho." },
+        { q: "3. Tipo de célula que carece de núcleo definido y organelos membranosos:", a: ["Eucariota", "Vegetal", "Procariota", "Animal"], c: 2, e: "Como las bacterias (Reino Monera)." },
+        { q: "4. Organelo encargado de la respiración celular y producción de ATP:", a: ["Ribosoma", "Mitocondria", "Lisosoma", "Aparato de Golgi"], c: 1, e: "Es la 'central eléctrica' de la célula." },
+        { q: "5. Estructura exclusiva de la célula vegetal que le da rigidez:", a: ["Membrana celular", "Pared celular", "Centriolo", "Lisosoma"], c: 1, e: "Compuesta principalmente de celulosa." },
+        { q: "6. Organelo donde se lleva a cabo la fotosíntesis:", a: ["Mitocondria", "Cloroplasto", "Núcleo", "Vacuola"], c: 1, e: "Contiene clorofila para captar la luz." },
+        { q: "7. Estructura que controla el paso de sustancias hacia dentro y fuera de la célula:", a: ["Pared celular", "Membrana plasmática", "Citoplasma", "Núcleo"], c: 1, e: "Es semipermeable y selectiva." },
+        { q: "8. Postulado de la Teoría Celular que dice 'Toda célula proviene de otra preexistente':", a: ["Unidad anatómica", "Unidad fisiológica", "Unidad de origen", "Unidad genética"], c: 2, e: "Formulado por Rudolf Virchow." },
+        { q: "9. Organelo encargado de la síntesis de proteínas:", a: ["Ribosoma", "Lisosoma", "Vacuola", "Retículo endoplasmático liso"], c: 0, e: "Pueden estar libres o en el retículo rugoso." },
+        { q: "10. Tipo de transporte celular que NO requiere energía (ATP):", a: ["Transporte activo", "Endocitosis", "Transporte pasivo", "Exocitosis"], c: 2, e: "Va a favor del gradiente de concentración (ej. difusión)." },
+        { q: "11. Movimiento de agua a través de una membrana semipermeable:", a: ["Difusión simple", "Osmosis", "Fagocitosis", "Diálisis"], c: 1, e: "Es un tipo especial de difusión pasiva." },
+        { q: "12. Organelo que contiene el material genético (ADN) en eucariotas:", a: ["Nucléolo", "Núcleo", "Ribosoma", "Citoplasma"], c: 1, e: "Centro de control celular." },
+        { q: "13. La teoría endosimbiótica explica el origen de:", a: ["Núcleo y Ribosomas", "Mitocondrias y Cloroplastos", "Pared celular", "Virus"], c: 1, e: "Propuesta por Lynn Margulis." },
+        { q: "14. Biomoléculas que son la fuente primaria de energía rápida:", a: ["Lípidos", "Proteínas", "Carbohidratos", "Ácidos nucleicos"], c: 2, e: "Como la glucosa y el almidón." },
+        { q: "15. Biomoléculas que almacenan energía a largo plazo y forman membranas:", a: ["Carbohidratos", "Lípidos", "Enzimas", "Vitaminas"], c: 1, e: "Grasas, aceites, fosfolípidos." },
+        { q: "16. Unidades básicas (monómeros) que forman las proteínas:", a: ["Monosacáridos", "Ácidos grasos", "Aminoácidos", "Nucleótidos"], c: 2, e: "Se unen mediante enlaces peptídicos." },
+        { q: "17. Ácido nucleico que contiene la información hereditaria:", a: ["ARN", "ADN", "ATP", "ADP"], c: 1, e: "Ácido Desoxirribonucleico." },
+        { q: "18. Base nitrogenada exclusiva del ARN (no está en el ADN):", a: ["Adenina", "Timina", "Uracilo", "Guanina"], c: 2, e: "El Uracilo sustituye a la Timina en el ARN." },
+        { q: "19. Modelo de la estructura de la membrana celular:", a: ["Mosaico fluido", "Llave-Cerradura", "Doble hélice", "Estático"], c: 0, e: "Propuesto por Singer y Nicholson." },
+        { q: "20. Proceso por el cual una célula 'traga' partículas sólidas grandes:", a: ["Pinocitosis", "Fagocitosis", "Osmosis", "Difusión facilitada"], c: 1, e: "Tipo de endocitosis (ej. glóbulos blancos)." },
+        { q: "21. El retículo endoplasmático RUGOSO se llama así porque tiene adheridos:", a: ["Ribosomas", "Lisosomas", "Lípidos", "Azúcares"], c: 0, e: "Encargado de síntesis y transporte de proteínas." },
+        { q: "22. Organelo encargado de la digestión celular (contiene enzimas hidrolíticas):", a: ["Vacuola", "Lisosoma", "Peroxisoma", "Golgi"], c: 1, e: "Degrada materiales de desecho." },
+        { q: "23. Estructura que empaqueta y distribuye proteínas (sistema de correos):", a: ["Retículo endoplasmático", "Aparato de Golgi", "Núcleo", "Mitocondria"], c: 1, e: "Modifica, clasifica y empaqueta macromoléculas." },
+        { q: "24. Células que tienen cromosomas lineales y organelos:", a: ["Bacterias", "Arqueas", "Procariotas", "Eucariotas"], c: 3, e: "Células de animales, plantas, hongos y protistas." },
+        { q: "25. El ATP (Adenosín Trifosfato) es:", a: ["Una proteína", "La moneda energética celular", "Un lípido", "Una enzima"], c: 1, e: "Almacena y libera energía para procesos celulares." },
+        { q: "26. Diferencia principal entre célula animal y vegetal:", a: ["La vegetal tiene mitocondrias", "La animal tiene pared celular", "La vegetal tiene cloroplastos y pared", "La animal es procariota"], c: 2, e: "Además las vegetales suelen tener una gran vacuola central." },
+        { q: "27. Solución donde la concentración de solutos es igual dentro y fuera de la célula:", a: ["Hipotónica", "Hipertónica", "Isotónica", "Saturada"], c: 2, e: "No hay cambio neto en el volumen celular." },
+        { q: "28. Elemento químico base de todas las moléculas orgánicas:", a: ["Oxígeno", "Carbono", "Nitrógeno", "Hidrógeno"], c: 1, e: "La química de la vida es la química del carbono." },
+        { q: "29. ¿Qué significa que una membrana sea 'hidrofóbica'?", a: ["Atrae el agua", "Repele el agua", "Disuelve el agua", "Congela el agua"], c: 1, e: "Las colas de los fosfolípidos son hidrofóbicas." },
+        { q: "30. Nivel de organización que sigue a la célula:", a: ["Órgano", "Sistema", "Tejido", "Organismo"], c: 2, e: "Conjunto de células similares con una función común." },
+
+        // --- UNIDAD 2: METABOLISMO (31-60) ---
+        { q: "31. Conjunto de reacciones químicas que ocurren en un organismo:", a: ["Homeostasis", "Metabolismo", "Reproducción", "Adaptación"], c: 1, e: "Se divide en anabolismo y catabolismo." },
+        { q: "32. Fase del metabolismo donde se construyen moléculas complejas (requiere energía):", a: ["Catabolismo", "Anabolismo", "Digestión", "Glucólisis"], c: 1, e: "Ejemplo: Fotosíntesis, síntesis de proteínas." },
+        { q: "33. Fase del metabolismo donde se degradan moléculas para liberar energía:", a: ["Anabolismo", "Catabolismo", "Síntesis", "Reducción"], c: 1, e: "Ejemplo: Respiración celular, digestión." },
+        { q: "34. Proteínas que actúan como catalizadores biológicos (aceleran reacciones):", a: ["Hormonas", "Enzimas", "Anticuerpos", "Receptores"], c: 1, e: "Disminuyen la energía de activación." },
+        { q: "35. Ecuación general de la Fotosíntesis:", a: ["\\( C_6H_{12}O_6 + O_2 \\to CO_2 + H_2O \\)", "\\( 6CO_2 + 6H_2O + Luz \\to C_6H_{12}O_6 + 6O_2 \\)", "\\( H_2 + O_2 \\to H_2O \\)", "Ninguna"], c: 1, e: "Convierte energía luminosa en energía química (glucosa)." },
+        { q: "36. Organismos capaces de producir su propio alimento:", a: ["Heterótrofos", "Autótrofos", "Saprófitos", "Parásitos"], c: 1, e: "Como las plantas y algas." },
+        { q: "37. Primera etapa de la respiración celular (ocurre en el citoplasma):", a: ["Ciclo de Krebs", "Cadena respiratoria", "Glucólisis", "Fermentación"], c: 2, e: "Rompe la glucosa en dos piruvatos. No requiere oxígeno." },
+        { q: "38. Respiración que requiere oxígeno:", a: ["Anaerobia", "Aerobia", "Fermentación láctica", "Fermentación alcohólica"], c: 1, e: "Produce mucha más energía (36-38 ATP)." },
+        { q: "39. Producto final de la fermentación en los músculos humanos (causa dolor):", a: ["Alcohol etílico", "Ácido láctico", "CO2", "Oxígeno"], c: 1, e: "Ocurre cuando falta oxígeno durante ejercicio intenso." },
+        { q: "40. Lugar donde ocurre el Ciclo de Krebs:", a: ["Citoplasma", "Matriz mitocondrial", "Membrana celular", "Núcleo"], c: 1, e: "Segunda etapa de la respiración aerobia." },
+        { q: "41. Molécula principal que las células usan para obtener energía:", a: ["ADN", "Glucosa", "Hemoglobina", "Insulina"], c: 1, e: "El combustible celular universal." },
+        { q: "42. Proceso por el cual las plantas pierden agua en forma de vapor:", a: ["Fotosíntesis", "Transpiración", "Respiración", "Gutación"], c: 1, e: "Ocurre a través de los estomas." },
+        { q: "43. Tipo de nutrición de los hongos y animales:", a: ["Autótrofa", "Fotosintética", "Heterótrofa", "Quimiosintética"], c: 2, e: "Deben consumir materia orgánica externa." },
+        { q: "44. Pigmento responsable de captar la luz en la fotosíntesis:", a: ["Hemoglobina", "Melanina", "Clorofila", "Caroteno"], c: 2, e: "Da el color verde a las plantas." },
+        { q: "45. Fase de la fotosíntesis que libera oxígeno:", a: ["Fase oscura (Ciclo de Calvin)", "Fase luminosa", "Glucólisis", "Ciclo de Krebs"], c: 1, e: "Proviene de la ruptura (fotólisis) de la molécula de agua." },
+        { q: "46. ¿Qué es la homeostasis?", a: ["Reproducción celular", "Equilibrio interno del organismo", "Muerte celular", "Mutación genética"], c: 1, e: "Capacidad de regular condiciones como temperatura y pH." },
+        { q: "47. Vitamina hidrosoluble deficiente en el escorbuto:", a: ["Vitamina A", "Vitamina C", "Vitamina D", "Vitamina K"], c: 1, e: "Ácido ascórbico." },
+        { q: "48. Mineral esencial para la formación de hemoglobina (transporte de O2):", a: ["Calcio", "Hierro", "Sodio", "Potasio"], c: 1, e: "Su carencia produce anemia." },
+        { q: "49. Enzima presente en la saliva que degrada carbohidratos:", a: ["Pepsina", "Amilasa", "Lipasa", "Tripsina"], c: 1, e: "Inicia la digestión química en la boca." },
+        { q: "50. La fermentación alcohólica es realizada principalmente por:", a: ["Virus", "Levaduras", "Músculos", "Plantas"], c: 1, e: "Usada para hacer pan, cerveza y vino." },
+        { q: "51. ¿Cuántos ATP netos produce la Glucólisis?", a: ["36", "38", "2", "4"], c: 2, e: "Es un proceso de baja eficiencia energética." },
+        { q: "52. El aceptor final de electrones en la respiración aerobia es:", a: ["CO2", "Agua", "Oxígeno", "Glucosa"], c: 2, e: "Al recibir los electrones y protones, forma agua." },
+        { q: "53. Organismo que obtiene energía oxidando compuestos inorgánicos:", a: ["Fotótrofo", "Quimioautótrofo", "Heterótrofo", "Parásito"], c: 1, e: "Común en bacterias extremófilas." },
+        { q: "54. Factores que afectan la actividad enzimática:", a: ["Solo temperatura", "Temperatura y pH", "Luz y sonido", "Tamaño de la célula"], c: 1, e: "Las enzimas se desnaturalizan en condiciones extremas." },
+        { q: "55. El ciclo de Calvin (fase oscura) tiene como objetivo:", a: ["Producir ATP", "Romper agua", "Fijar CO2 para formar glucosa", "Liberar O2"], c: 2, e: "Síntesis de azúcares en el estroma del cloroplasto." },
+        { q: "56. Nutrición donde el organismo absorbe nutrientes de materia en descomposición:", a: ["Parásita", "Saprófita", "Holozoica", "Autótrofa"], c: 1, e: "Típica de hongos y bacterias descomponedoras." },
+        { q: "57. Enfermedad metabólica relacionada con la insulina y glucosa:", a: ["Anemia", "Diabetes mellitus", "Hipertensión", "Gastritis"], c: 1, e: "Falla en la regulación del azúcar en sangre." },
+        { q: "58. Molécula que transporta electrones en la respiración celular:", a: ["ATP", "NADH", "ADN", "ARN"], c: 1, e: "Nicotinamida adenina dinucleótido." },
+        { q: "59. Proceso inverso a la fotosíntesis en términos de reactivos y productos:", a: ["Fermentación", "Respiración aerobia", "Digestión", "Excreción"], c: 1, e: "Consume O2 y glucosa, libera CO2 y agua." },
+        { q: "60. El sitio activo es:", a: ["Parte de la mitocondria", "Lugar de la enzima donde se une el sustrato", "Centro del núcleo", "Pared celular"], c: 1, e: "Donde ocurre la reacción catalítica." },
+
+        // --- UNIDAD 3: GENÉTICA Y REPRODUCCIÓN (61-80) ---
+        { q: "61. Proceso de división celular que genera dos células idénticas (células somáticas):", a: ["Meiosis", "Mitosis", "Fecundación", "Sinapsis"], c: 1, e: "Para crecimiento y reparación de tejidos." },
+        { q: "62. Proceso de división que reduce cromosomas a la mitad (gametos):", a: ["Mitosis", "Meiosis", "Bipartición", "Clonación"], c: 1, e: "Produce espermatozoides y óvulos haploides." },
+        { q: "63. Padre de la genética clásica:", a: ["Watson", "Crick", "Gregor Mendel", "Darwin"], c: 2, e: "Trabajó con plantas de chícharo." },
+        { q: "64. Estructura del ADN descubierta por Watson y Crick:", a: ["Hélice simple", "Doble hélice", "Lámina plegada", "Circular"], c: 1, e: "Dos cadenas complementarias unidas." },
+        { q: "65. Unidad física básica de la herencia:", a: ["Cromosoma", "Gen", "Proteína", "Histona"], c: 1, e: "Segmento de ADN que codifica una característica." },
+        { q: "66. Conjunto de genes de un organismo (su 'receta'):", a: ["Fenotipo", "Genotipo", "Cariotipo", "Prototipo"], c: 1, e: "La información genética interna." },
+        { q: "67. Manifestación física o visible de los genes (ej. ojos azules):", a: ["Genotipo", "Fenotipo", "Alelo", "Locus"], c: 1, e: "Genotipo + Ambiente = Fenotipo." },
+        { q: "68. Individuo con dos alelos iguales para un carácter (AA o aa):", a: ["Heterocigoto", "Homocigoto", "Híbrido", "Dominante"], c: 1, e: "Raza pura." },
+        { q: "69. Fase del ciclo celular donde se duplica el ADN:", a: ["G1", "G2", "Fase S (Síntesis)", "Mitosis"], c: 2, e: "Ocurre en la Interfase, antes de la división." },
+        { q: "70. Número de cromosomas en una célula humana somática (diploide):", a: ["23", "46", "92", "44"], c: 1, e: "23 pares." },
+        { q: "71. Reproducción asexual común en bacterias:", a: ["Mitosis", "Fisión binaria (bipartición)", "Meiosis", "Esporulación"], c: 1, e: "La célula se divide en dos." },
+        { q: "72. Alelo que se expresa siempre que está presente:", a: ["Recesivo", "Dominante", "Intermedio", "Codominante"], c: 1, e: "Se representa con letra mayúscula (A)." },
+        { q: "73. Enfermedad genética ligada al sexo (cromosoma X):", a: ["Síndrome de Down", "Daltonismo", "Diabetes", "Gripe"], c: 1, e: "Más común en hombres." },
+        { q: "74. Azúcar presente en el ARN:", a: ["Desoxirribosa", "Ribosa", "Glucosa", "Fructosa"], c: 1, e: "De ahí su nombre Ácido Ribonucleico." },
+        { q: "75. Organismo modificado genéticamente mediante biotecnología:", a: ["Clon", "Transgénico", "Híbrido", "Mutante"], c: 1, e: "Se le han insertado genes de otra especie." },
+        { q: "76. ¿Qué es una mutación?", a: ["Cambio en la secuencia del ADN", "Muerte celular", "División celular", "Infección viral"], c: 0, e: "Fuente de variabilidad genética." },
+        { q: "77. Fase de la mitosis donde los cromosomas se alinean en el centro:", a: ["Profase", "Anafase", "Metafase", "Telofase"], c: 2, e: "Forman la placa ecuatorial." },
+        { q: "78. Dogma central de la biología molecular:", a: ["ADN -> ARN -> Proteína", "Proteína -> ARN -> ADN", "ARN -> ADN -> Proteína", "ADN -> Proteína -> ARN"], c: 0, e: "Flujo de la información genética." },
+        { q: "79. Cromosomas sexuales del hombre:", a: ["XX", "XY", "YY", "XO"], c: 1, e: "La mujer es XX." },
+        { q: "80. Muerte celular programada:", a: ["Necrosis", "Apoptosis", "Cáncer", "Metástasis"], c: 1, e: "Proceso ordenado y necesario." },
+
+        // --- UNIDAD 4: ECOLOGÍA Y EVOLUCIÓN (81-100) ---
+        { q: "81. Autor de la teoría de la evolución por Selección Natural:", a: ["Lamarck", "Charles Darwin", "Mendel", "Pasteur"], c: 1, e: "Publicada en 'El Origen de las Especies' (1859)." },
+        { q: "82. Ciencia que estudia las relaciones entre los seres vivos y su ambiente:", a: ["Biología", "Ecología", "Zoología", "Botánica"], c: 1, e: "Término acuñado por Haeckel." },
+        { q: "83. Conjunto de organismos de la misma especie en un lugar y tiempo:", a: ["Comunidad", "Población", "Ecosistema", "Bioma"], c: 1, e: "Nivel ecológico básico." },
+        { q: "84. Conjunto de poblaciones diferentes que conviven (factores bióticos):", a: ["Población", "Comunidad (Biocenosis)", "Biotopo", "Especie"], c: 1, e: "Todas las especies de un área." },
+        { q: "85. Factores físicos y químicos sin vida (luz, agua, temperatura):", a: ["Bióticos", "Abióticos", "Orgánicos", "Biológicos"], c: 1, e: "Determinan el biotopo." },
+        { q: "86. Organismo que se alimenta de productores (herbívoro):", a: ["Productor", "Consumidor primario", "Consumidor secundario", "Descomponedor"], c: 1, e: "Segundo nivel trófico." },
+        { q: "87. Máxima biodiversidad terrestre se encuentra en:", a: ["Tundra", "Desierto", "Selva tropical", "Bosque de coníferas"], c: 2, e: "Debido a la alta humedad y temperatura constante." },
+        { q: "88. Relación donde ambos organismos se benefician:", a: ["Parasitismo", "Mutualismo", "Comensalismo", "Competencia"], c: 1, e: "Ejemplo: Abejas y flores." },
+        { q: "89. Problema ambiental causado por exceso de CO2 y gases de efecto invernadero:", a: ["Lluvia ácida", "Calentamiento global", "Eutrofización", "Adelgazamiento de capa de ozono"], c: 1, e: "Retiene el calor en la atmósfera." },
+        { q: "90. Mecanismo evolutivo propuesto por Lamarck (incorrecto):", a: ["Selección natural", "Herencia de caracteres adquiridos", "Deriva génica", "Mutación"], c: 1, e: "Creía que el uso o desuso de órganos se heredaba (ej. cuello jirafas)." },
+        { q: "91. Organismos que reciclan la materia orgánica muerta:", a: ["Productores", "Consumidores", "Descomponedores", "Depredadores"], c: 2, e: "Hongos y bacterias." },
+        { q: "92. Capa de la Tierra donde existe vida:", a: ["Atmósfera", "Litósfera", "Biosfera", "Hidrósfera"], c: 2, e: "Suma de todos los ecosistemas." },
+        { q: "93. Principal causa de pérdida de biodiversidad:", a: ["Caza", "Destrucción del hábitat", "Contaminación", "Especies invasoras"], c: 1, e: "Por actividad humana." },
+        { q: "94. ¿Qué es una cadena trófica?", a: ["Una red de pesca", "Transferencia de energía alimenticia", "Un tipo de ADN", "Una simbiosis"], c: 1, e: "Quién se come a quién." },
+        { q: "95. Gas causante de la Lluvia Ácida:", a: ["Oxígeno", "Dióxido de azufre (SO2)", "Helio", "Metano"], c: 1, e: "Y óxidos de nitrógeno." },
+        { q: "96. Estrategia de conservación 'In situ':", a: ["Zoológicos", "Áreas Naturales Protegidas", "Bancos de semillas", "Acuarios"], c: 1, e: "Proteger especies en su hábitat natural." },
+        { q: "97. El nicho ecológico es:", a: ["El lugar donde vive", "La función o 'profesión' del organismo", "Su tamaño", "Su nombre científico"], c: 1, e: "Incluye qué come, cuándo, dónde, etc." },
+        { q: "98. Sucesión ecológica que inicia en un terreno desnudo (ej. roca volcánica):", a: ["Primaria", "Secundaria", "Terciaria", "Clímax"], c: 0, e: "Donde no había suelo previo." },
+        { q: "99. Especies que solo existen en una región geográfica específica:", a: ["Cosmopolitas", "Endémicas", "Exóticas", "Migratorias"], c: 1, e: "Ejemplo: Axolote en Xochimilco." },
+        { q: "100. La capa de ozono nos protege de:", a: ["Rayos X", "Radiación Ultravioleta (UV)", "Meteoritos", "Ondas de radio"], c: 1, e: "Evita daños al ADN y cáncer de piel." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        // Refrescar MathJax
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

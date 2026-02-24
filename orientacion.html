@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orientación Juvenil II</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #f57f17; /* Naranja / Energía / Juventud */
+            --secondary-color: #e65100; /* Naranja Oscuro */
+            --bg-color: #fff3e0;
+            --card-bg: #ffffff;
+            --text-main: #3e2723;
+            --success: #2e7d32;
+            --error: #c62828;
+            --warning: #ff8f00;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Verdana', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #ffe0b2;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--secondary-color); margin: 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .header h2 { color: var(--primary-color); margin: 10px 0 0; font-weight: 600; font-size: 1.2rem; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; display: block; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #ffcc80;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background: #ffe0b2;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: var(--success); }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: var(--error); }
+        .feedback.unanswered { background: #fff8e1; border-left: 4px solid var(--warning); color: #ef6c00; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #bf360c; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Orientación Juvenil y Profesional II</h1>
+    <p>Decisiones • Sexualidad • Equidad de Género</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS - ORIENTACIÓN II
+    const questions = [
+        // --- UNIDAD 1: LA TOMA DE DECISIONES (1-35) ---
+        { q: "1. ¿Qué es la toma de decisiones?", a: ["Dejar que el destino actúe", "Proceso de elegir entre varias alternativas para resolver un problema", "Hacer lo que otros digan", "No hacer nada"], c: 1, e: "Es el acto fundamental de la libertad y responsabilidad." },
+        { q: "2. Primer paso del proceso de toma de decisiones:", a: ["Evaluar resultados", "Definir el problema", "Elegir la alternativa", "Implementar la solución"], c: 1, e: "Si no sabes cuál es el problema, no puedes solucionarlo." },
+        { q: "3. Factor interno que influye en la toma de decisiones vocacionales:", a: ["La economía del país", "La opinión de los padres", "Intereses y aptitudes", "El prestigio social"], c: 2, e: "Lo que está dentro de ti (gustos y habilidades)." },
+        { q: "4. Factor externo que influye en la toma de decisiones:", a: ["Autoestima", "Personalidad", "Oferta educativa y mercado laboral", "Valores personales"], c: 2, e: "Lo que el entorno ofrece o limita." },
+        { q: "5. ¿Qué es una 'alternativa' en el proceso de decisión?", a: ["Un problema", "Una de las posibles soluciones u opciones", "El resultado final", "Un obstáculo"], c: 1, e: "Caminos posibles a elegir." },
+        { q: "6. Capacidad natural o adquirida para realizar una actividad con destreza:", a: ["Interés", "Aptitud", "Actitud", "Valor"], c: 1, e: "El 'poder hacer' algo bien." },
+        { q: "7. Preferencia o gusto hacia ciertas actividades:", a: ["Aptitud", "Interés", "Habilidad", "Talento"], c: 1, e: "El 'querer hacer' algo." },
+        { q: "8. Decisión que se toma bajo certeza:", a: ["Se conocen las consecuencias exactas de cada opción", "No se sabe qué pasará", "Depende del azar", "Es muy arriesgada"], c: 0, e: "Información completa y resultado predecible." },
+        { q: "9. Decisión tomada bajo riesgo:", a: ["Se conocen las probabilidades de los resultados", "No se sabe nada", "Es segura", "No hay opciones"], c: 0, e: "Conoces las probabilidades (ej. 50% éxito, 50% fracaso)." },
+        { q: "10. Último paso del proceso de toma de decisiones:", a: ["Implementación", "Evaluación de resultados", "Análisis de alternativas", "Definición del problema"], c: 1, e: "Retroalimentación para saber si funcionó." },
+        { q: "11. ¿Qué es la 'Procrastinación' en la toma de decisiones?", a: ["Decidir rápido", "Postergar o aplazar la decisión innecesariamente", "Analizar mucho", "Pedir consejo"], c: 1, e: "Dejar las cosas para después por miedo o pereza." },
+        { q: "12. Estilo de decisión 'Impulsivo':", a: ["Analiza todos los datos", "Decide al instante sin pensar en consecuencias", "Deja que otros decidan", "Nunca decide"], c: 1, e: "Actúa por emoción momentánea." },
+        { q: "13. Estilo de decisión 'Racional':", a: ["Se basa en hechos, lógica y análisis", "Se basa en corazonadas", "Se basa en el horóscopo", "Es lento e ineficaz"], c: 0, e: "Busca maximizar beneficios objetivamente." },
+        { q: "14. La elección de carrera técnica en el CECyT es una decisión:", a: ["Irrelevante", "Trascendental y de vida", "Temporal", "Impulsiva"], c: 1, e: "Define el futuro académico y profesional inmediato." },
+        { q: "15. Herramienta para analizar Fortalezas, Oportunidades, Debilidades y Amenazas:", a: ["Test Vocacional", "FODA", "Entrevista", "Encuesta"], c: 1, e: "Matriz de análisis estratégico personal." },
+        { q: "16. Las Fortalezas en el FODA personal son:", a: ["Factores internos positivos", "Factores externos positivos", "Factores internos negativos", "Factores externos negativos"], c: 0, e: "Lo que haces bien y tienes bajo control." },
+        { q: "17. Las Amenazas en el FODA personal son:", a: ["Factores internos", "Factores externos negativos que ponen en riesgo la meta", "Miedos personales", "Debilidades"], c: 1, e: "Ej. Mucha competencia laboral, crisis económica." },
+        { q: "18. Conflicto de decisión 'Atracción-Atracción':", a: ["Debes elegir entre dos opciones buenas", "Debes elegir entre dos malas", "Una opción tiene pros y contras", "No hay opciones"], c: 0, e: "Ej. ¿Pizza o Hamburguesa? Ambas gustan." },
+        { q: "19. Conflicto de decisión 'Evitación-Evitación':", a: ["Elegir entre dos opciones desagradables", "Elegir entre dos buenas", "No querer decidir", "Tener miedo"], c: 0, e: "Ej. ¿Estudiar materia aburrida o reprobar? Ambas molestan." },
+        { q: "20. La asertividad en la toma de decisiones implica:", a: ["Imponer mi decisión", "Decidir considerando mis derechos y los de los demás", "Dejar que otros elijan", "Ser agresivo"], c: 1, e: "Decidir con respeto y firmeza." },
+        { q: "21. Valor que guía la toma de decisiones éticas:", a: ["Egoísmo", "Responsabilidad", "Indiferencia", "Ambición desmedida"], c: 1, e: "Asumir las consecuencias de los actos." },
+        { q: "22. ¿Qué es un plan de vida y carrera?", a: ["Un sueño", "Una estrategia estructurada para lograr metas personales y profesionales", "Un horario escolar", "Una lista de deseos"], c: 1, e: "Instrumento de planeación a largo plazo." },
+        { q: "23. Meta a corto plazo:", a: ["Se logra en años", "Se logra en días o semanas (inmediato)", "Es imposible", "Es para la vejez"], c: 1, e: "Ej. Aprobar este examen." },
+        { q: "24. Meta a largo plazo:", a: ["Terminar la tarea hoy", "Terminar la carrera profesional en 5 años", "Ir al cine el sábado", "Comer sano hoy"], c: 1, e: "Requiere planeación sostenida." },
+        { q: "25. La presión de grupo (amigos) es un factor:", a: ["Interno", "Externo", "Genético", "Irrelevante"], c: 1, e: "Influencia social poderosa en la adolescencia." },
+        { q: "26. ¿Qué es la 'Parálisis por análisis'?", a: ["Analizar tanto que no se toma ninguna decisión", "Decidir rápido", "No tener datos", "Ser muy inteligente"], c: 0, e: "El exceso de información bloquea la acción." },
+        { q: "27. Al elegir carrera, lo más importante es:", a: ["Cuanto dinero ganaré", "Que mis amigos vayan ahí", "La integración de mis intereses, aptitudes y valores", "Que sea fácil"], c: 2, e: "La satisfacción personal y profesional." },
+        { q: "28. Un obstáculo interno para decidir es:", a: ["Falta de dinero", "Miedo al fracaso", "Falta de escuelas", "La distancia"], c: 1, e: "Barrera psicológica." },
+        { q: "29. ¿Qué es la autonomía?", a: ["Hacer lo que quiera sin reglas", "Capacidad de decidir por uno mismo con responsabilidad", "Depender de los padres", "Vivir solo"], c: 1, e: "Independencia de criterio." },
+        { q: "30. Técnica creativa para generar opciones de solución:", a: ["Lluvia de ideas", "Crítica", "Juicio", "FODA"], c: 0, e: "Brainstorming." },
+        { q: "31. ¿Qué es el costo de oportunidad?", a: ["Lo que pagas en dinero", "El valor de la opción que NO elegiste", "Un impuesto", "El precio de la escuela"], c: 1, e: "Lo que sacrificas al tomar una decisión." },
+        { q: "32. Decisión programada:", a: ["Es rutinaria y repetitiva", "Es única y nueva", "Es de emergencia", "Es creativa"], c: 0, e: "Ya existe un procedimiento para ella." },
+        { q: "33. Decisión no programada:", a: ["Rutinaria", "Situación nueva, compleja o única", "Fácil", "Automática"], c: 1, e: "Requiere análisis específico." },
+        { q: "34. Influencia de la familia en la decisión vocacional:", a: ["Nula", "Determinante (apoyo o presión)", "Solo económica", "Legal"], c: 1, e: "Es el primer núcleo de socialización y valores." },
+        { q: "35. ¿Qué significa 'ser el arquitecto de tu propio destino'?", a: ["Estudiar arquitectura", "Tomar decisiones conscientes para construir tu vida", "Dejar todo al azar", "Que el destino ya está escrito"], c: 1, e: "Metáfora de la responsabilidad personal." },
+
+        // --- UNIDAD 2: RELACIONES INTERPERSONALES Y SEXUALIDAD (36-70) ---
+        { q: "36. Etapa del desarrollo humano caracterizada por cambios físicos, hormonales y búsqueda de identidad:", a: ["Niñez", "Adolescencia", "Adultez", "Vejez"], c: 1, e: "Etapa de transición crítica." },
+        { q: "37. Estado emocional intenso y pasajero, idealización de la pareja:", a: ["Amor maduro", "Enamoramiento", "Amistad", "Compromiso"], c: 1, e: "Dura poco tiempo, es químico y pasional." },
+        { q: "38. Sentimiento profundo, estable, basado en conocimiento real y aceptación del otro:", a: ["Enamoramiento", "Amor", "Atracción", "Deseo"], c: 1, e: "Requiere voluntad y construcción diaria." },
+        { q: "39. Relación afectiva donde dos personas se conocen y comparten actividades (fase previa al compromiso):", a: ["Matrimonio", "Noviazgo", "Amistad", "Conocidos"], c: 1, e: "Etapa de conocimiento mutuo." },
+        { q: "40. Característica de un noviazgo constructivo:", a: ["Celos excesivos", "Control", "Respeto, comunicación y crecimiento mutuo", "Violencia"], c: 2, e: "Suma al bienestar de ambos." },
+        { q: "41. Característica de un noviazgo destructivo:", a: ["Apoyo", "Libertad", "Violencia, celos y manipulación", "Confianza"], c: 2, e: "Resta bienestar y salud mental." },
+        { q: "42. Conjunto de características biológicas (genitales, cromosomas):", a: ["Género", "Sexo", "Orientación", "Rol"], c: 1, e: "Macho o Hembra (biología)." },
+        { q: "43. Construcción social y cultural sobre lo que es ser hombre o mujer:", a: ["Sexo", "Género", "Biología", "Anatomía"], c: 1, e: "Masculino o Femenino (cultura)." },
+        { q: "44. Dimensión de la sexualidad que abarca dar y recibir afecto:", a: ["Reproductiva", "Afectiva", "Erótica", "Biológica"], c: 1, e: "Vínculos emocionales." },
+        { q: "45. Dimensión de la sexualidad relacionada con el placer:", a: ["Reproductiva", "Erótica", "Social", "Ética"], c: 1, e: "Disfrute sexual." },
+        { q: "46. Dimensión de la sexualidad relacionada con tener hijos:", a: ["Reproductiva", "Erótica", "Lúdica", "Afectiva"], c: 0, e: "Perpetuación de la especie." },
+        { q: "47. Infección de Transmisión Sexual (ITS) causada por un virus incurable (se controla):", a: ["Sífilis", "Gonorrea", "VIH/SIDA", "Clamidia"], c: 2, e: "Virus de Inmunodeficiencia Humana." },
+        { q: "48. ITS bacteriana curable con antibióticos:", a: ["VIH", "VPH", "Herpes", "Sífilis"], c: 3, e: "Causada por Treponema pallidum." },
+        { q: "49. Método anticonceptivo de BARRERA que protege contra ITS:", a: ["Pastilla", "Parche", "Condón (Preservativo)", "DIU"], c: 2, e: "Único que evita el contacto de fluidos." },
+        { q: "50. Método anticonceptivo HORMONAL:", a: ["Condón", "Pastillas anticonceptivas", "Ritmo", "Vasectomía"], c: 1, e: "Inhibe la ovulación mediante hormonas." },
+        { q: "51. Método anticonceptivo DEFINITIVO (quirúrgico) para el hombre:", a: ["Salpingoclasia", "Vasectomía", "DIU", "Implante"], c: 1, e: "Corte de los conductos deferentes." },
+        { q: "52. Método anticonceptivo DEFINITIVO para la mujer:", a: ["Vasectomía", "Salpingoclasia (Ligadura de trompas)", "Parche", "Inyección"], c: 1, e: "Obstrucción de las trompas de Falopio." },
+        { q: "53. La 'píldora del día siguiente' es un método:", a: ["Regular", "De emergencia", "De barrera", "Definitivo"], c: 1, e: "Solo para casos excepcionales (alta dosis hormonal)." },
+        { q: "54. Derecho sexual de los jóvenes:", a: ["No recibir información", "Decidir sobre su propio cuerpo y sexualidad", "Ser discriminados", "No tener acceso a salud"], c: 1, e: "Autonomía corporal." },
+        { q: "55. ¿Qué es el consentimiento en una relación sexual?", a: ["Decir tal vez", "El silencio", "Acuerdo claro, voluntario y entusiasta", "Presión"], c: 2, e: "Sin consentimiento es violencia." },
+        { q: "56. Virus del Papiloma Humano (VPH) se asocia principalmente con:", a: ["Cáncer cervicouterino", "SIDA", "Gripe", "Diabetes"], c: 0, e: "Existen vacunas para prevenirlo." },
+        { q: "57. Estilo de comunicación donde se expresan sentimientos sin agredir:", a: ["Pasivo", "Agresivo", "Asertivo", "Violento"], c: 2, e: "Clave en relaciones sanas." },
+        { q: "58. Estilo de comunicación donde se impone la voluntad sobre otros:", a: ["Pasivo", "Agresivo", "Asertivo", "Empático"], c: 1, e: "Genera conflicto y rechazo." },
+        { q: "59. Estilo de comunicación donde no se expresan deseos y se deja pisotear:", a: ["Pasivo", "Agresivo", "Asertivo", "Líder"], c: 0, e: "Baja autoestima." },
+        { q: "60. El ciclo de respuesta sexual humana incluye:", a: ["Deseo, Excitación, Meseta, Orgasmo, Resolución", "Solo orgasmo", "Inicio y fin", "Sueño y vigilia"], c: 0, e: "Modelo de Masters y Johnson." },
+        { q: "61. ¿Qué es la orientación sexual?", a: ["A quién te sientes atraído emocional y sexualmente", "Tu sexo biológico", "Tu género", "Cómo te vistes"], c: 0, e: "Heterosexual, Homosexual, Bisexual, etc." },
+        { q: "62. ¿Qué es la identidad de género?", a: ["Cómo te perciben los demás", "Cómo te sientes e identificas tú mismo (hombre, mujer, otro)", "Tu ADN", "Tu ropa"], c: 1, e: "Vivencia interna del género." },
+        { q: "63. Mito sobre la sexualidad:", a: ["El condón protege de ITS", "La primera vez sí puedes embarazarte", "Lavarse después del sexo evita el embarazo", "El sexo es natural"], c: 2, e: "Falso. El lavado no elimina espermatozoides internos." },
+        { q: "64. La abstinencia es:", a: ["Un método 100% efectivo para no embarazarse", "Una enfermedad", "Un método hormonal", "Riesgosa"], c: 0, e: "No tener relaciones sexuales." },
+        { q: "65. ¿Qué es la salud reproductiva?", a: ["Solo no tener enfermedades", "Bienestar físico, mental y social en lo relacionado al sistema reproductivo", "Tener muchos hijos", "Ir al médico"], c: 1, e: "Concepto integral de la OMS." },
+        { q: "66. Riesgo del embarazo adolescente:", a: ["Mayor madurez", "Interrupción del proyecto de vida y riesgos de salud", "Mejor economía", "Estabilidad"], c: 1, e: "Impacto social y biológico negativo." },
+        { q: "67. La violencia en el noviazgo suele iniciar con:", a: ["Golpes", "Control, celos y bromas hirientes", "Respeto", "Indiferencia"], c: 1, e: "Escala gradualmente (Violentómetro)." },
+        { q: "68. ¿Qué es el 'sexting'?", a: ["Hablar de sexo", "Envío de contenido erótico (fotos/videos) por celular", "Un método anticonceptivo", "Una ITS"], c: 1, e: "Riesgo de ciberacoso o filtración." },
+        { q: "69. ¿Qué es la pornografía?", a: ["Educación sexual", "Material que representa actos sexuales con fin de excitar", "Arte", "Biología"], c: 1, e: "No refleja la realidad sexual afectiva." },
+        { q: "70. La comunicación en pareja debe basarse en:", a: ["Adivinar lo que el otro piensa", "Confianza y claridad", "Mentiras piadosas", "Silencios"], c: 1, e: "Pilar de la relación." },
+
+        // --- UNIDAD 3: EQUIDAD DE GÉNERO (71-100) ---
+        { q: "71. Idea generalizada y simplificada sobre cómo deben ser hombres y mujeres:", a: ["Verdad", "Estereotipo de género", "Ley", "Biología"], c: 1, e: "Ej. 'Los hombres no lloran'." },
+        { q: "72. Comportamientos socialmente esperados para cada sexo:", a: ["Roles de género", "Instintos", "Genes", "Hormonas"], c: 0, e: "Ej. Mujer=Casa, Hombre=Trabajo (tradicional)." },
+        { q: "73. Igualdad ante la ley de hombres y mujeres:", a: ["Equidad", "Igualdad jurídica", "Feminismo", "Machismo"], c: 1, e: "Derechos constitucionales." },
+        { q: "74. Dar a cada quien lo que necesita para que haya justicia (trato diferenciado para igualar):", a: ["Igualdad", "Equidad", "Discriminación", "Abuso"], c: 1, e: "Paso necesario para llegar a la igualdad real." },
+        { q: "75. Actitud de prepotencia de los hombres respecto a las mujeres:", a: ["Feminismo", "Machismo", "Hembrismo", "Humanismo"], c: 1, e: "Sistema patriarcal de dominación." },
+        { q: "76. Movimiento social que busca la igualdad de derechos entre sexos:", a: ["Machismo", "Feminismo", "Hembrismo", "Patriarcado"], c: 1, e: "Lucha histórica por derechos de la mujer." },
+        { q: "77. Violencia que deja marcas en el cuerpo (golpes, empujones):", a: ["Psicológica", "Física", "Económica", "Patrimonial"], c: 1, e: "Visible y dolorosa." },
+        { q: "78. Violencia que daña la autoestima (insultos, humillaciones, ley del hielo):", a: ["Física", "Psicológica / Emocional", "Sexual", "Económica"], c: 1, e: "Invisible pero muy dañina." },
+        { q: "79. Violencia que controla el dinero o impide trabajar a la pareja:", a: ["Física", "Económica", "Sexual", "Física"], c: 1, e: "Forma de control y dependencia." },
+        { q: "80. Violencia que presiona o fuerza a tener relaciones sexuales:", a: ["Física", "Sexual", "Económica", "Laboral"], c: 1, e: "Incluye acoso y violación." },
+        { q: "81. Lenguaje incluyente evita:", a: ["Usar palabras", "El sexismo en el lenguaje (ej. usar 'todos' para todos y todas)", "La gramática", "Hablar mucho"], c: 1, e: "Visibiliza a las mujeres en el discurso." },
+        { q: "82. Techo de cristal:", a: ["Un domo", "Barrera invisible que impide a las mujeres subir a puestos directivos", "Una ventana", "Un edificio"], c: 1, e: "Discriminación laboral sutil." },
+        { q: "83. Doble jornada laboral de la mujer:", a: ["Tener dos empleos", "Trabajar fuera de casa y además hacer todo el trabajo doméstico", "Trabajar 16 horas", "Ganar doble"], c: 1, e: "Carga desproporcionada de cuidados." },
+        { q: "84. Nuevas masculinidades:", a: ["Hombres que quieren ser mujeres", "Formas de ser hombre libres de machismo y violencia", "Moda", "Debilidad"], c: 1, e: "Hombres corresponsables, sensibles y no violentos." },
+        { q: "85. La violencia de género se basa en:", a: ["El odio", "Relaciones de poder desiguales entre sexos", "El alcohol", "La pobreza"], c: 1, e: "El agresor se siente superior o dueño de la víctima." },
+        { q: "86. Misoginia:", a: ["Amor a las mujeres", "Odio o aversión hacia las mujeres", "Miedo a los hombres", "Igualdad"], c: 1, e: "Raíz cultural de la violencia feminicida." },
+        { q: "87. Sororidad:", a: ["Hermandad", "Solidaridad entre mujeres ante la discriminación", "Odio", "Soledad"], c: 1, e: "Apoyo mutuo femenino." },
+        { q: "88. Androcentrismo:", a: ["Ver el mundo solo desde la perspectiva masculina", "Ver el mundo desde la mujer", "Centro de la tierra", "Robot"], c: 0, e: "El hombre como medida de todas las cosas." },
+        { q: "89. Discriminación laboral por género:", a: ["Pagar menos a una mujer por el mismo trabajo que un hombre", "Contratar a quien sea", "Despedir por robo", "Pagar tiempo extra"], c: 0, e: "Brecha salarial." },
+        { q: "90. Acoso sexual:", a: ["Coqueteo mutuo", "Conducta sexual no deseada u ofensiva", "Amistad", "Amor"], c: 1, e: "Delito contra la libertad sexual." },
+        { q: "91. Feminicidio:", a: ["Homicidio de una mujer por razones de género", "Muerte natural", "Accidente", "Suicidio"], c: 0, e: "La forma más extrema de violencia de género." },
+        { q: "92. Estereotipo: 'Las mujeres son malas conduciendo'. Es:", a: ["Un hecho científico", "Un prejuicio falso", "Una ley", "Una verdad"], c: 1, e: "Generalización sin base." },
+        { q: "93. Estereotipo: 'Los hombres deben ser proveedores'. Es:", a: ["Mandato de género tradicional", "Ley natural", "Obligación biológica", "Falso"], c: 0, e: "Presión social sobre el hombre." },
+        { q: "94. Corresponsabilidad en el hogar:", a: ["La mujer hace todo", "El hombre 'ayuda'", "Ambos comparten equitativamente las tareas domésticas", "Se contrata a alguien"], c: 2, e: "Clave para la equidad." },
+        { q: "95. Micro-machismos:", a: ["Machismos pequeños", "Gestos sutiles y cotidianos de dominio masculino", "No existen", "Son bromas"], c: 1, e: "Ej. El mesero le da la cuenta al hombre." },
+        { q: "96. Empoderamiento de la mujer:", a: ["Dominar a los hombres", "Adquirir poder y control sobre su propia vida", "Ser agresiva", "Tener dinero"], c: 1, e: "Autonomía y agencia." },
+        { q: "97. Educación no sexista:", a: ["Escuelas separadas", "Educar sin roles de género tradicionales", "No hablar de sexo", "Educar solo a hombres"], c: 1, e: "Fomenta la igualdad desde la infancia." },
+        { q: "98. Día Internacional de la Mujer:", a: ["8 de Marzo", "10 de Mayo", "14 de Febrero", "25 de Noviembre"], c: 0, e: "Día de lucha por derechos, no de felicitación." },
+        { q: "99. Día Internacional de la Eliminación de la Violencia contra la Mujer:", a: ["25 de Noviembre", "8 de Marzo", "1 de Enero", "12 de Octubre"], c: 0, e: "Día Naranja." },
+        { q: "100. El objetivo final de la equidad de género es:", a: ["Que las mujeres manden", "Una sociedad justa con iguales oportunidades para todos", "Eliminar a los hombres", "Guerra de sexos"], c: 1, e: "Beneficia a toda la sociedad." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        // MathJax
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

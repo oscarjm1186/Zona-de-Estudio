@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expresión Oral y Escrita II - IPN</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #8e24aa; /* Morado / Creatividad / Literatura */
+            --secondary-color: #5c007a; /* Morado Oscuro */
+            --bg-color: #f3e5f5;
+            --card-bg: #ffffff;
+            --text-main: #4a148c;
+            --success: #66bb6a;
+            --error: #ef5350;
+            --warning: #ffa726;
+        }
+
+        body {
+            font-family: 'Merriweather', 'Georgia', serif; /* Tipografía literaria */
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #e1bee7;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--secondary-color); margin: 0; font-size: 2rem; letter-spacing: 0.5px; }
+        .header h2 { color: var(--primary-color); margin: 10px 0 0; font-weight: normal; font-size: 1.2rem; font-style: italic; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: bold; margin-bottom: 20px; display: block; font-family: 'Segoe UI', sans-serif; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #e1bee7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .options label:hover {
+            background: #f3e5f5;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: #1b5e20; }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: #b71c1c; }
+        .feedback.unanswered { background: #fffde7; border-left: 4px solid var(--warning); color: #f57f17; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(142, 36, 170, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #4a0072; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 30px;
+            display: none;
+            border-top: 6px solid var(--secondary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Expresión Oral y Escrita II</h1>
+    <p>Literatura • Redacción • Ortografía • Expresión Oral</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS - EXPRESIÓN ORAL Y ESCRITA II
+    const questions = [
+        // --- UNIDAD 1: LENGUAJE Y DISCURSO (1-20) ---
+        { q: "1. Función de la lengua que busca embellecer el mensaje (usada en literatura):", a: ["Referencial", "Poética (Estética)", "Apelativa", "Fática"], c: 1, e: "Centrada en la forma del mensaje." },
+        { q: "2. Función de la lengua centrada en las emociones del emisor:", a: ["Poética", "Emotiva (Sintomática)", "Metalingüística", "Referencial"], c: 1, e: "Ej. '¡Qué alegría verte!'." },
+        { q: "3. Significado objetivo y literal de una palabra (diccionario):", a: ["Connotación", "Denotación", "Ambigüedad", "Polisemia"], c: 1, e: "Ej. 'Corazón': Órgano muscular." },
+        { q: "4. Significado subjetivo, figurado o emocional de una palabra:", a: ["Connotación", "Denotación", "Sintaxis", "Morfología"], c: 0, e: "Ej. 'Eres un sol' (eres buena persona)." },
+        { q: "5. Prototipo textual que relata una serie de sucesos en el tiempo:", a: ["Descripción", "Narración", "Argumentación", "Diálogo"], c: 1, e: "Cuenta una historia." },
+        { q: "6. Prototipo textual que explica cómo es algo o alguien (pintura con palabras):", a: ["Narración", "Descripción", "Exposición", "Diálogo"], c: 1, e: "Detalla características." },
+        { q: "7. Prototipo textual que busca defender una idea u opinión:", a: ["Narración", "Argumentación", "Descripción", "Diálogo"], c: 1, e: "Usa tesis y argumentos." },
+        { q: "8. ¿Qué es un texto recreativo?", a: ["Texto legal", "Texto que busca deleitar o entretener", "Texto científico", "Noticia"], c: 1, e: "Incluye cuentos, poemas, chistes." },
+        { q: "9. El nivel de lenguaje utilizado en situaciones formales y académicas es:", a: ["Coloquial", "Culto", "Vulgar", "Jerga"], c: 1, e: "Uso preciso y normativo del idioma." },
+        { q: "10. Palabras que suenan igual pero se escriben diferente y tienen distinto significado:", a: ["Sinónimos", "Homófonos", "Antónimos", "Parónimos"], c: 1, e: "Ej. Casa (hogar) y Caza (cacería)." },
+        { q: "11. 'Tus ojos son dos luceros' es un ejemplo de lenguaje:", a: ["Denotativo", "Connotativo", "Científico", "Técnico"], c: 1, e: "Uso figurado." },
+        { q: "12. Función de la lengua que se usa para hablar del propio lenguaje:", a: ["Metalingüística", "Fática", "Poética", "Referencial"], c: 0, e: "Ej. 'La palabra perro es un sustantivo'." },
+        { q: "13. Vicio del lenguaje que consiste en usar palabras innecesarias (ej. 'subir para arriba'):", a: ["Barbarismo", "Pleonasmo", "Cacofonía", "Solecismo"], c: 1, e: "Redundancia viciosa." },
+        { q: "14. Vicio del lenguaje por mal sonido o repetición de sílabas (ej. 'tomate tu té'):", a: ["Cacofonía", "Anfibología", "Barbarismo", "Extranjerismo"], c: 0, e: "Disonancia acústica." },
+        { q: "15. Ambigüedad o doble sentido en una frase se llama:", a: ["Anfibología", "Solecismo", "Pleonasmo", "Arcaísmo"], c: 0, e: "Ej. 'Vimos un cuadro en el salón que estaba mal pintado'." },
+        { q: "16. ¿Qué es la adecuación en un texto?", a: ["Que no tenga faltas", "Que se adapte a la situación comunicativa y al receptor", "Que sea largo", "Que rime"], c: 1, e: "Usar el tono y vocabulario correcto." },
+        { q: "17. ¿Qué es la coherencia?", a: ["Lógica y sentido global del texto", "Uso de nexos", "Buena letra", "Ortografía"], c: 0, e: "Que las ideas no se contradigan." },
+        { q: "18. ¿Qué es la cohesión?", a: ["La unión gramatical entre palabras y párrafos (nexos, puntuación)", "El tema del texto", "La originalidad", "El mensaje"], c: 0, e: "El 'pegamento' del texto." },
+        { q: "19. Elemento de la comunicación que es el tema del que se habla:", a: ["Canal", "Referente", "Código", "Ruido"], c: 1, e: "La realidad a la que alude el mensaje." },
+        { q: "20. Texto funcional que sirve para solicitar un empleo:", a: ["Carta petición", "Currículum Vitae", "Oficio", "Circular"], c: 1, e: "Resume trayectoria y datos." },
+
+        // --- UNIDAD 2: GÉNERO NARRATIVO (21-45) ---
+        { q: "21. Género literario que relata sucesos reales o imaginarios protagonizados por personajes:", a: ["Lírico", "Narrativo", "Dramático", "Didáctico"], c: 1, e: "Incluye cuento, novela, leyenda." },
+        { q: "22. Narrador que lo sabe todo (piensa y siente por los personajes):", a: ["Testigo", "Protagonista", "Omnisciente", "Segunda persona"], c: 2, e: "Conocimiento total, tercera persona." },
+        { q: "23. Narrador que cuenta su propia historia (Yo):", a: ["Omnisciente", "Protagonista", "Testigo", "Observador"], c: 1, e: "Primera persona." },
+        { q: "24. Narrador que cuenta lo que ve, pero no sabe lo que piensan los demás:", a: ["Omnisciente", "Testigo", "Dios", "Autor"], c: 1, e: "Puede ser un personaje secundario." },
+        { q: "25. Estructura clásica de la narración:", a: ["Inicio, Nudo (Clímax), Desenlace", "Tesis, Antítesis, Síntesis", "Introducción, Desarrollo, Conclusión", "Verso y Estrofa"], c: 0, e: "Planteamiento, conflicto y resolución." },
+        { q: "26. Personaje que se opone al protagonista:", a: ["Principal", "Antagonista", "Secundario", "Ambiental"], c: 1, e: "Genera el conflicto." },
+        { q: "27. Personaje que evoluciona y cambia durante la historia:", a: ["Plano", "Redondo", "Incidental", "Estático"], c: 1, e: "Tiene profundidad psicológica." },
+        { q: "28. Subgénero narrativo breve, con pocos personajes y un solo conflicto:", a: ["Novela", "Cuento", "Epopeya", "Mito"], c: 1, e: "Intensidad y brevedad." },
+        { q: "29. Subgénero narrativo extenso, con tramas complejas y muchos personajes:", a: ["Cuento", "Novela", "Fábula", "Leyenda"], c: 1, e: "Mayor desarrollo psicológico y ambiental." },
+        { q: "30. Relato tradicional que explica el origen del mundo o fenómenos naturales (dioses):", a: ["Leyenda", "Mito", "Fábula", "Crónica"], c: 1, e: "Carácter sagrado original." },
+        { q: "31. Relato que mezcla hechos históricos con fantasía popular:", a: ["Mito", "Leyenda", "Noticia", "Ensayo"], c: 1, e: "Ej. La Llorona." },
+        { q: "32. Narración breve que deja una enseñanza moral (moraleja), usualmente con animales:", a: ["Mito", "Fábula", "Epopeya", "Novela"], c: 1, e: "Didáctica." },
+        { q: "33. Momento de mayor tensión en la narración:", a: ["Planteamiento", "Clímax", "Desenlace", "Final"], c: 1, e: "Punto cumbre del nudo." },
+        { q: "34. Tiempo narrativo que sigue el orden cronológico (reloj):", a: ["Lineal", "Circular", "Salto atrás", "Psicológico"], c: 0, e: "Inicio a fin sin saltos." },
+        { q: "35. Salto al pasado en la narración:", a: ["Flash forward", "Flashback (Analepsis)", "Elipsis", "Resumen"], c: 1, e: "Recuerdo momentáneo." },
+        { q: "36. Salto al futuro en la narración:", a: ["Analepsis", "Prolepsis (Flash forward)", "Racconto", "Lineal"], c: 1, e: "Anticipación." },
+        { q: "37. Espacio físico donde ocurre la acción:", a: ["Atmósfera", "Escenario", "Tiempo", "Trama"], c: 1, e: "Lugar geográfico o arquitectónico." },
+        { q: "38. Clima emocional de la obra (miedo, alegría, tensión):", a: ["Escenario", "Atmósfera", "Estructura", "Tono"], c: 1, e: "Sensación que transmite." },
+        { q: "39. Autor de 'Pedro Páramo' (realismo mágico mexicano):", a: ["Gabriel García Márquez", "Juan Rulfo", "Octavio Paz", "Carlos Fuentes"], c: 1, e: "Clásico de la literatura mexicana." },
+        { q: "40. Autor de 'Don Quijote de la Mancha':", a: ["Lope de Vega", "Miguel de Cervantes", "Góngora", "Quevedo"], c: 1, e: "Obra cumbre del español." },
+        { q: "41. Estilo donde el narrador cede la palabra al personaje (diálogo directo):", a: ["Estilo directo", "Estilo indirecto", "Monólogo", "Descripción"], c: 0, e: "Usa guiones o comillas." },
+        { q: "42. Estilo donde el narrador cuenta lo que dijo el personaje ('Dijo que...'):", a: ["Estilo directo", "Estilo indirecto", "Soliloquio", "Teatro"], c: 1, e: "El narrador intermedia." },
+        { q: "43. Corriente literaria que busca reflejar la realidad tal cual es:", a: ["Romanticismo", "Realismo", "Surrealismo", "Barroco"], c: 1, e: "Siglo XIX." },
+        { q: "44. Corriente literaria que exalta los sentimientos y la libertad:", a: ["Realismo", "Romanticismo", "Neoclasicismo", "Naturalismo"], c: 1, e: "Subjetividad sobre razón." },
+        { q: "45. Texto narrativo en verso que cuenta hazañas de héroes (ej. La Ilíada):", a: ["Novela", "Epopeya", "Cuento", "Fábula"], c: 1, e: "Género épico antiguo." },
+
+        // --- UNIDAD 3: GÉNERO LÍRICO (POESÍA) (46-70) ---
+        { q: "46. Género literario que expresa sentimientos y subjetividad del autor:", a: ["Narrativo", "Lírico", "Dramático", "Ensayo"], c: 1, e: "Predomina la función emotiva y poética." },
+        { q: "47. Cada línea de un poema se llama:", a: ["Párrafo", "Verso", "Estrofa", "Renglón"], c: 1, e: "Unidad rítmica." },
+        { q: "48. Conjunto de versos separados por un espacio:", a: ["Párrafo", "Estrofa", "Capítulo", "Acto"], c: 1, e: "Equivalente al párrafo en prosa." },
+        { q: "49. Coincidencia de sonidos al final de los versos:", a: ["Ritmo", "Rima", "Métrica", "Sinalefa"], c: 1, e: "Consonante o asonante." },
+        { q: "50. Rima donde coinciden vocales y consonantes (ej. canción - pasión):", a: ["Asonante", "Consonante (Perfecta)", "Libre", "Blanca"], c: 1, e: "Identidad fonética total." },
+        { q: "51. Rima donde solo coinciden las vocales (ej. casa - rama):", a: ["Asonante (Imperfecta)", "Consonante", "Libre", "No existe"], c: 0, e: "Identidad parcial." },
+        { q: "52. Medida de las sílabas de un verso:", a: ["Rima", "Métrica", "Ritmo", "Cadencia"], c: 1, e: "Arte menor o arte mayor." },
+        { q: "53. Licencia poética que une la vocal final de una palabra con la inicial de la siguiente:", a: ["Hiato", "Sinalefa", "Diéresis", "Sinéresis"], c: 1, e: "Resta una sílaba al conteo." },
+        { q: "54. Si un verso termina en palabra aguda (ej. amor), se:", a: ["Suma una sílaba (+1)", "Resta una sílaba (-1)", "Queda igual", "Multiplica"], c: 0, e: "Ley del acento final." },
+        { q: "55. Si un verso termina en palabra esdrújula (ej. pájaro), se:", a: ["Suma una sílaba", "Resta una sílaba (-1)", "Queda igual", "Divide"], c: 1, e: "Ley del acento final." },
+        { q: "56. Verso de 11 sílabas (muy usado en el Renacimiento):", a: ["Alejandrino", "Endecasílabo", "Octosílabo", "Heptasílabo"], c: 1, e: "Verso de arte mayor." },
+        { q: "57. Verso de 8 sílabas (popular en romances y corridos):", a: ["Endecasílabo", "Octosílabo", "Decasílabo", "Dodecasílabo"], c: 1, e: "Verso de arte menor." },
+        { q: "58. Poema de 14 versos (dos cuartetos y dos tercetos):", a: ["Romance", "Soneto", "Oda", "Haiku"], c: 1, e: "Estructura clásica (ej. Sor Juana)." },
+        { q: "59. Figura retórica que compara dos elementos usando 'como' o 'parece':", a: ["Metáfora", "Símil (Comparación)", "Hipérbole", "Antítesis"], c: 1, e: "Ej. 'Tus dientes como perlas'." },
+        { q: "60. Figura retórica que sustituye un término por otro por semejanza (sin nexos):", a: ["Símil", "Metáfora", "Hipérbaton", "Anáfora"], c: 1, e: "Ej. 'Las perlas de tu boca'." },
+        { q: "61. Figura retórica que consiste en exagerar:", a: ["Metáfora", "Hipérbole", "Ironía", "Sinécdoque"], c: 1, e: "Ej. 'Lloró un río de lágrimas'." },
+        { q: "62. Figura retórica que atribuye cualidades humanas a objetos o animales:", a: ["Prosopopeya (Personificación)", "Metáfora", "Símil", "Aliteración"], c: 0, e: "Ej. 'El viento susurraba'." },
+        { q: "63. Figura retórica que altera el orden lógico de la oración:", a: ["Anáfora", "Hipérbaton", "Elipsis", "Metonimia"], c: 1, e: "Ej. 'Volverán las oscuras golondrinas...' (Bécquer)." },
+        { q: "64. Figura retórica que repite palabras al inicio de los versos:", a: ["Anáfora", "Epífora", "Aliteración", "Pleonasmo"], c: 0, e: "Para dar énfasis." },
+        { q: "65. Figura retórica que opone dos ideas contrarias:", a: ["Sinonimia", "Antítesis", "Metáfora", "Hipérbole"], c: 1, e: "Ej. 'Es tan corto el amor y tan largo el olvido'." },
+        { q: "66. ¿Quién es el 'Sujeto Lírico'?", a: ["El autor real", "La voz que habla en el poema", "El lector", "La editorial"], c: 1, e: "El 'Yo' poético (ficticio)." },
+        { q: "67. Autor mexicano, Premio Nobel de Literatura (ensayo y poesía):", a: ["Jaime Sabines", "Octavio Paz", "Amado Nervo", "Sor Juana"], c: 1, e: "Autor de 'El laberinto de la soledad'." },
+        { q: "68. Sor Juana Inés de la Cruz pertenece al periodo:", a: ["Renacimiento", "Barroco", "Romanticismo", "Modernismo"], c: 1, e: "Siglo XVII, Nueva España." },
+        { q: "69. Poema japonés breve de 3 versos (5-7-5 sílabas):", a: ["Soneto", "Haiku", "Oda", "Silva"], c: 1, e: "Temática naturalista usualmente." },
+        { q: "70. Verso libre significa:", a: ["No tiene rima ni métrica fija", "Es gratis", "Es corto", "Es vulgar"], c: 0, e: "Característico de la poesía contemporánea." },
+
+        // --- UNIDAD 4: GÉNERO DRAMÁTICO Y EXPRESIÓN ORAL (71-100) ---
+        { q: "71. Género literario escrito para ser representado ante un público:", a: ["Narrativo", "Dramático (Teatro)", "Lírico", "Epistolar"], c: 1, e: "Usa diálogos y acotaciones." },
+        { q: "72. Indicaciones del autor sobre movimientos, gestos o escenografía (entre paréntesis):", a: ["Diálogos", "Acotaciones (Didascalias)", "Versos", "Parlamentos"], c: 1, e: "Guía para el director y actores." },
+        { q: "73. Subgénero dramático con final funesto o trágico:", a: ["Comedia", "Tragedia", "Drama", "Sainete"], c: 1, e: "Protagonista lucha contra el destino y pierde." },
+        { q: "74. Subgénero dramático con final feliz y tono humorístico:", a: ["Tragedia", "Comedia", "Melodrama", "Auto sacramental"], c: 1, e: "Busca la risa y critica vicios." },
+        { q: "75. Subgénero que mezcla elementos trágicos y cómicos (más cercano a la realidad):", a: ["Drama (Tragicomedia)", "Tragedia", "Farsa", "Ópera"], c: 0, e: "Refleja la vida cotidiana." },
+        { q: "76. Estructura externa de la obra de teatro (división mayor):", a: ["Escenas", "Actos", "Cuadros", "Párrafos"], c: 1, e: "Marcados por la caída del telón." },
+        { q: "77. División marcada por la entrada o salida de personajes:", a: ["Acto", "Escena", "Cuadro", "Capítulo"], c: 1, e: "Unidad mínima de acción." },
+        { q: "78. Intercambio verbal entre personajes:", a: ["Monólogo", "Diálogo", "Soliloquio", "Aparte"], c: 1, e: "Forma base del teatro." },
+        { q: "79. Cuando un personaje habla solo en escena (pensamientos):", a: ["Diálogo", "Monólogo / Soliloquio", "Coro", "Aparte"], c: 1, e: "Reflexión interior." },
+        { q: "80. Comentario de un personaje al público que los otros 'no oyen':", a: ["Secreto", "Aparte", "Grito", "Susurro"], c: 1, e: "Convención teatral." },
+        { q: "81. Cualidad de la expresión oral: claridad en la pronunciación:", a: ["Volumen", "Dicción", "Fluidez", "Ritmo"], c: 1, e: "Articular bien las palabras." },
+        { q: "82. Cualidad de la expresión oral: intensidad de la voz:", a: ["Dicción", "Volumen", "Tono", "Velocidad"], c: 1, e: "Ser escuchado por todos." },
+        { q: "83. Cualidad de la expresión oral: continuidad y naturalidad al hablar:", a: ["Fluidez", "Dicción", "Volumen", "Mímica"], c: 0, e: "Sin trabas ni muletillas excesivas." },
+        { q: "84. Movimientos corporales y gestos que acompañan al discurso:", a: ["Proxémica", "Kinesia (Lenguaje corporal)", "Gramática", "Sintaxis"], c: 1, e: "Refuerzan el mensaje." },
+        { q: "85. Discurso preparado ante un público:", a: ["Charla", "Oratoria / Exposición", "Diálogo", "Murmullo"], c: 1, e: "Requiere estructura y técnica." },
+        { q: "86. Regla ortográfica: Las palabras agudas llevan tilde si:", a: ["Terminan en cualquier letra", "Terminan en N, S o Vocal", "Nunca llevan tilde", "Terminan en consonante"], c: 1, e: "Ej. Canción, compás, mamá." },
+        { q: "87. Regla ortográfica: Las palabras graves llevan tilde si:", a: ["Terminan en N, S o Vocal", "NO terminan en N, S o Vocal", "Siempre", "Nunca"], c: 1, e: "Ej. Árbol, lápiz." },
+        { q: "88. Regla ortográfica: Las palabras esdrújulas llevan tilde:", a: ["Siempre", "Nunca", "A veces", "Si terminan en vocal"], c: 0, e: "Ej. Esdrújula, música." },
+        { q: "89. Signo de puntuación que separa ideas dentro de un párrafo:", a: ["Punto y aparte", "Punto y seguido", "Coma", "Dos puntos"], c: 1, e: "Mismo tema, distinta oración." },
+        { q: "90. Uso de la 'B' o 'V': Se escribe '___ida' (cualidad de vida):", a: ["Bida", "Vida", "Wida", "Vída"], c: 1, e: "Del latín vita." },
+        { q: "91. El 'Leísmo' es el uso incorrecto de:", a: ["La", "Le", "Lo", "Los"], c: 1, e: "Usar 'le' en lugar de 'lo' (CD)." },
+        { q: "92. Texto que presenta la opinión del autor sobre un tema (libre estructura):", a: ["Resumen", "Ensayo", "Informe", "Acta"], c: 1, e: "Género didáctico-literario." },
+        { q: "93. 'Hay' viene del verbo:", a: ["Doler", "Haber", "Hallar", "Ser"], c: 1, e: "Existencia." },
+        { q: "94. 'Ahí' indica:", a: ["Lugar", "Existencia", "Dolor", "Tiempo"], c: 0, e: "Adverbio de lugar." },
+        { q: "95. 'Ay' indica:", a: ["Lugar", "Existencia", "Dolor o sorpresa (interjección)", "Tiempo"], c: 2, e: "Exclamación." },
+        { q: "96. La palabra 'Haya' (del verbo haber) se escribe con:", a: ["Y", "LL", "H", "Sin H"], c: 0, e: "Espero que haya comida." },
+        { q: "97. La palabra 'Halla' (del verbo hallar/encontrar) se escribe con:", a: ["Y", "LL", "H", "Sin H"], c: 1, e: "Él halla la respuesta." },
+        { q: "98. ¿Qué es un tecnicismo?", a: ["Palabra vulgar", "Palabra propia de una ciencia o arte", "Insulto", "Poema"], c: 1, e: "Vocabulario especializado." },
+        { q: "99. Sinónimo de 'Efímero':", a: ["Eterno", "Pasajero / Breve", "Fuerte", "Largo"], c: 1, e: "Que dura poco." },
+        { q: "100. Antónimo de 'Altruista':", a: ["Generoso", "Egoísta", "Bueno", "Solidario"], c: 1, e: "Que solo piensa en sí mismo." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

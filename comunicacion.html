@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicación y Liderazgo</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #006064; /* Cian Oscuro / Profesional */
+            --secondary-color: #00838f; /* Cian Medio */
+            --bg-color: #e0f7fa;
+            --card-bg: #ffffff;
+            --text-main: #263238;
+            --success: #00695c;
+            --error: #c62828;
+            --warning: #f9a825;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #b2ebf2;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .header h2 { color: var(--secondary-color); margin: 10px 0 0; font-weight: 600; font-size: 1.2rem; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; display: block; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background: #e0f2f1;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #e0f2f1; border-left: 4px solid var(--success); color: var(--success); }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: var(--error); }
+        .feedback.unanswered { background: #fffde7; border-left: 4px solid var(--warning); color: #f57f17; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 96, 100, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #00363a; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 30px;
+            display: none;
+            border-top: 6px solid var(--secondary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Comunicación y Liderazgo</h1>
+    <p>Comunicación • Trabajo en Equipo • Liderazgo • Toma de Decisiones</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS - COMUNICACIÓN Y LIDERAZGO
+    const questions = [
+        // --- UNIDAD 1: LA COMUNICACIÓN (1-30) ---
+        { q: "1. Proceso mediante el cual se transmite información de un punto a otro:", a: ["Liderazgo", "Comunicación", "Negociación", "Motivación"], c: 1, e: "Definición fundamental del curso." },
+        { q: "2. Elemento de la comunicación que origina y envía el mensaje:", a: ["Receptor", "Canal", "Emisor", "Código"], c: 2, e: "Es la fuente de la información." },
+        { q: "3. Elemento que recibe y decodifica el mensaje:", a: ["Emisor", "Receptor", "Contexto", "Ruido"], c: 1, e: "El destinatario de la información." },
+        { q: "4. Es el medio físico por donde viaja el mensaje (aire, cable, papel):", a: ["Código", "Referente", "Canal", "Contexto"], c: 2, e: "El soporte material de la comunicación." },
+        { q: "5. Sistema de signos y reglas compartido por emisor y receptor (ej. idioma):", a: ["Canal", "Mensaje", "Código", "Ruido"], c: 2, e: "Sin un código común, no hay entendimiento." },
+        { q: "6. Respuesta del receptor que cierra el ciclo de comunicación:", a: ["Retroalimentación (Feedback)", "Codificación", "Ruido", "Barrera"], c: 0, e: "Permite saber si el mensaje se entendió." },
+        { q: "7. Tipo de barrera comunicativa relacionada con el significado de las palabras:", a: ["Física", "Semántica", "Fisiológica", "Psicológica"], c: 1, e: "Ejemplo: Usar tecnicismos que el otro no entiende." },
+        { q: "8. Tipo de barrera causada por el entorno (ruido ambiental, mala señal):", a: ["Física", "Semántica", "Psicológica", "Administrativa"], c: 0, e: "Obstáculos en el canal." },
+        { q: "9. Tipo de barrera relacionada con emociones, prejuicios o estados de ánimo:", a: ["Física", "Semántica", "Psicológica", "Fisiológica"], c: 2, e: "El miedo o la ira pueden distorsionar el mensaje." },
+        { q: "10. Comunicación que utiliza palabras (oral o escrita):", a: ["No verbal", "Verbal", "Kinésica", "Proxémica"], c: 1, e: "Usa el lenguaje articulado." },
+        { q: "11. Comunicación a través de gestos, miradas y posturas:", a: ["Verbal", "Escrita", "No verbal", "Digital"], c: 2, e: "Transmite gran parte del contenido emocional." },
+        { q: "12. Ciencia que estudia el lenguaje corporal (movimientos):", a: ["Proxémica", "Kinésica", "Semiótica", "Lingüística"], c: 1, e: "Gestos y movimientos corporales." },
+        { q: "13. Ciencia que estudia el uso del espacio y las distancias entre personas:", a: ["Proxémica", "Kinésica", "Paralingüística", "Gramática"], c: 0, e: "Distancia íntima, personal, social y pública." },
+        { q: "14. Elementos como el tono de voz, volumen y ritmo pertenecen a la:", a: ["Semántica", "Paralingüística", "Sintaxis", "Ortografía"], c: 1, e: "Lo que acompaña a las palabras ('cómo' se dice)." },
+        { q: "15. Nivel de comunicación que se da con uno mismo (pensamiento):", a: ["Interpersonal", "Intrapersonal", "Masiva", "Grupal"], c: 1, e: "Diálogo interno." },
+        { q: "16. Nivel de comunicación entre dos o más personas:", a: ["Intrapersonal", "Interpersonal", "Unilateral", "Privada"], c: 1, e: "Base de las relaciones humanas." },
+        { q: "17. Función del lenguaje que busca informar objetivamente (ej. noticias):", a: ["Emotiva", "Referencial", "Poética", "Fática"], c: 1, e: "Se centra en el contexto o realidad." },
+        { q: "18. Función del lenguaje centrada en el emisor y sus sentimientos:", a: ["Referencial", "Emotiva (Expresiva)", "Apelativa", "Metalingüística"], c: 1, e: "Ej. '¡Ay, qué dolor!'." },
+        { q: "19. Función del lenguaje que busca influir en el receptor (órdenes, ruegos):", a: ["Apelativa (Conativa)", "Referencial", "Poética", "Fática"], c: 0, e: "Ej. 'Cierra la puerta'." },
+        { q: "20. Capacidad de expresar opiniones y derechos sin agredir ni someterse:", a: ["Pasividad", "Agresividad", "Asertividad", "Timidez"], c: 2, e: "El punto medio saludable en la comunicación." },
+        { q: "21. Escuchar activamente significa:", a: ["Oír sin prestar atención", "Interrumpir para opinar", "Prestar atención total y comprender", "Juzgar al hablante"], c: 2, e: "Habilidad clave del liderazgo." },
+        { q: "22. En el esquema de comunicación, la 'Codificación' la realiza el:", a: ["Receptor", "Emisor", "Canal", "Mensaje"], c: 1, e: "Transforma la idea en signos." },
+        { q: "23. En el esquema de comunicación, la 'Decodificación' la realiza el:", a: ["Receptor", "Emisor", "Ruido", "Contexto"], c: 0, e: "Interpreta los signos para entender la idea." },
+        { q: "24. El rumor es un ejemplo de comunicación:", a: ["Formal", "Informal", "Escrita", "Vertical"], c: 1, e: "No sigue los canales oficiales de la organización." },
+        { q: "25. Comunicación que fluye de jefes a subordinados:", a: ["Ascendente", "Descendente", "Horizontal", "Diagonal"], c: 1, e: "Instrucciones, políticas, feedback." },
+        { q: "26. Comunicación que fluye de subordinados a jefes:", a: ["Ascendente", "Descendente", "Horizontal", "Rumor"], c: 0, e: "Reportes, sugerencias, quejas." },
+        { q: "27. Comunicación entre personas del mismo nivel jerárquico:", a: ["Vertical", "Horizontal (Lateral)", "Externa", "Formal"], c: 1, e: "Coordinación entre departamentos." },
+        { q: "28. Un memorándum es un ejemplo de comunicación:", a: ["Oral", "Escrita", "No verbal", "Informal"], c: 1, e: "Documento formal interno." },
+        { q: "29. ¿Qué es la empatía en la comunicación?", a: ["Sentir lástima", "Ponerse en el lugar del otro", "Estar de acuerdo en todo", "Ignorar al otro"], c: 1, e: "Comprender la perspectiva ajena." },
+        { q: "30. El contexto en la comunicación se refiere a:", a: ["El idioma", "El ambiente físico, social y psicológico", "El canal", "El ruido"], c: 1, e: "El escenario donde ocurre el acto comunicativo." },
+
+        // --- UNIDAD 2: LIDERAZGO (31-60) ---
+        { q: "31. Capacidad de influir en un grupo para alcanzar metas:", a: ["Administración", "Liderazgo", "Control", "Poder"], c: 1, e: "Definición clásica de liderazgo." },
+        { q: "32. Estilo de liderazgo donde el líder toma todas las decisiones sin consultar:", a: ["Democrático", "Autocrático", "Laissez-Faire", "Transformacional"], c: 1, e: "Poder centralizado." },
+        { q: "33. Estilo de liderazgo que involucra al equipo en la toma de decisiones:", a: ["Autocrático", "Democrático (Participativo)", "Liberal", "Dictatorial"], c: 1, e: "Fomenta el compromiso." },
+        { q: "34. Estilo de liderazgo 'Dejar hacer', da total libertad al grupo:", a: ["Autocrático", "Democrático", "Laissez-Faire", "Paternalista"], c: 2, e: "El líder interviene lo mínimo posible." },
+        { q: "35. Diferencia principal entre Jefe y Líder:", a: ["El jefe inspira, el líder manda", "El jefe usa la autoridad, el líder influye y motiva", "No hay diferencia", "El líder es el dueño"], c: 1, e: "La autoridad vs la influencia." },
+        { q: "36. Teoría que clasifica a los líderes según su interés por la gente o la producción (Grid):", a: ["Maslow", "Blake y Mouton (Rejilla Gerencial)", "Herzberg", "McGregor"], c: 1, e: "Grid Gerencial con coordenadas (1,9), (9,1), etc." },
+        { q: "37. En el Grid Gerencial, el líder (9,9) es:", a: ["Club Campestre", "Empobrecido", "De equipo (Ideal)", "Autoritario"], c: 2, e: "Alto interés en la gente y en la producción." },
+        { q: "38. Teoría X de McGregor asume que el trabajador:", a: ["Es flojo y debe ser controlado", "Es creativo y responsable", "Busca autorrealización", "Quiere ser líder"], c: 0, e: "Visión pesimista del empleado." },
+        { q: "39. Teoría Y de McGregor asume que el trabajador:", a: ["Odia el trabajo", "Busca responsabilidades y es creativo", "Solo trabaja por dinero", "Necesita castigos"], c: 1, e: "Visión optimista y humanista." },
+        { q: "40. Liderazgo que se adapta al nivel de madurez del equipo:", a: ["Situacional", "Carismático", "Burocrático", "Tradicional"], c: 0, e: "Propuesto por Hersey y Blanchard." },
+        { q: "41. Líder que inspira y busca el cambio profundo en sus seguidores:", a: ["Transaccional", "Transformacional", "Burocrático", "Pasivo"], c: 1, e: "Va más allá del intercambio de premios." },
+        { q: "42. Capacidad de reconocer y gestionar las emociones propias y ajenas:", a: ["Coeficiente Intelectual", "Inteligencia Emocional", "Lógica", "Empatía"], c: 1, e: "Clave para el liderazgo moderno (Goleman)." },
+        { q: "43. Poder que emana del puesto oficial o jerarquía:", a: ["Poder de experto", "Poder legítimo", "Poder de referencia", "Poder carismático"], c: 1, e: "La autoridad formal." },
+        { q: "44. Poder basado en el conocimiento o habilidades especiales:", a: ["Poder de experto", "Poder coercitivo", "Poder legítimo", "Poder de recompensa"], c: 0, e: "Se sigue al líder porque 'sabe'." },
+        { q: "45. Característica de un líder resiliente:", a: ["Se rinde fácil", "Supera adversidades y aprende de ellas", "Ignora los problemas", "Culpa a otros"], c: 1, e: "Capacidad de recuperación." },
+        { q: "46. Técnica de motivación que consiste en dar poder y autonomía:", a: ["Coaching", "Empowerment", "Mentoring", "Feedback"], c: 1, e: "Empoderamiento." },
+        { q: "47. La Pirámide de Maslow jerarquiza:", a: ["Los estilos de mando", "Las necesidades humanas", "Los tipos de comunicación", "Los problemas"], c: 1, e: "Desde necesidades fisiológicas hasta autorrealización." },
+        { q: "48. Según Maslow, la necesidad más alta es:", a: ["Seguridad", "Afiliación", "Autorrealización", "Reconocimiento"], c: 2, e: "Desarrollo del máximo potencial." },
+        { q: "49. Habilidad del líder para asignar tareas a otros:", a: ["Delegar", "Ordenar", "Ignorar", "Centralizar"], c: 0, e: "Multiplica la eficiencia del equipo." },
+        { q: "50. Un líder carismático basa su influencia en:", a: ["El miedo", "Su personalidad y encanto", "El dinero", "Las leyes"], c: 1, e: "Genera entusiasmo y lealtad." },
+        { q: "51. Estilo de liderazgo 'Paternalista':", a: ["Protege y guía como un padre, pero no deja decidir", "Deja hacer todo", "Es cruel", "Es democrático"], c: 0, e: "Cuida pero controla." },
+        { q: "52. El liderazgo transaccional se basa en:", a: ["Inspiración", "Intercambio (premios por desempeño)", "Miedo", "Amistad"], c: 1, e: "Gestión por objetivos y recompensas." },
+        { q: "53. Componente de la Inteligencia Emocional que es el control de impulsos:", a: ["Autoconciencia", "Autorregulación", "Motivación", "Empatía"], c: 1, e: "Pensar antes de actuar." },
+        { q: "54. ¿Qué es la Visión en un líder?", a: ["Tener buena vista", "Imagen clara y atractiva del futuro", "Saber mandar", "Conocer el pasado"], c: 1, e: "Hacia dónde dirige al grupo." },
+        { q: "55. La congruencia en un líder significa:", a: ["Hacer lo que dice", "Hablar mucho", "Ser simpático", "Tener dinero"], c: 0, e: "Alineación entre palabras y acciones." },
+        { q: "56. El liderazgo es nato o se hace?", a: ["Solo nato", "Solo se hace", "Ambas (hay rasgos, pero se aprende)", "Es suerte"], c: 2, e: "Consenso actual: se puede desarrollar." },
+        { q: "57. Factor clave para el liderazgo en el siglo XXI:", a: ["Fuerza física", "Adaptabilidad y aprendizaje continuo", "Autoritarismo", "Antigüedad"], c: 1, e: "Entornos VUCA (volátiles)." },
+        { q: "58. ¿Qué es el Coaching?", a: ["Entrenamiento deportivo", "Proceso de acompañamiento para desarrollar potencial", "Terapia psicológica", "Dar órdenes"], c: 1, e: "Ayuda a otros a alcanzar metas." },
+        { q: "59. Líder que solo aparece cuando hay problemas graves:", a: ["Proactivo", "Reactivo", "Visionario", "Estratégico"], c: 1, e: "Actúa por reacción, no por prevención." },
+        { q: "60. La 'Misión' define:", a: ["El futuro", "La razón de ser actual de la organización", "Los valores", "Las reglas"], c: 1, e: "El propósito presente." },
+
+        // --- UNIDAD 3: GRUPOS Y EQUIPOS (61-80) ---
+        { q: "61. Conjunto de personas que interactúan pero con objetivos individuales:", a: ["Equipo", "Grupo", "Masa", "Sociedad"], c: 1, e: "La suma de partes, sin sinergia." },
+        { q: "62. Conjunto de personas con habilidades complementarias y objetivo común:", a: ["Grupo", "Equipo", "Multitud", "Población"], c: 1, e: "Existe sinergia y responsabilidad compartida." },
+        { q: "63. Fenómeno donde el resultado del equipo es mayor a la suma de las partes (1+1=3):", a: ["Sinergia", "Entropía", "Conflicto", "Cohesión"], c: 0, e: "El sello distintivo de un equipo." },
+        { q: "64. Etapa de formación de equipos donde surgen conflictos (Tuckman):", a: ["Formación", "Tormenta (Storming)", "Normatividad", "Desempeño"], c: 1, e: "Lucha por roles y liderazgo." },
+        { q: "65. Rol en el equipo enfocado en cumplir la tarea:", a: ["Rol social", "Rol de tarea", "Rol individual", "Rol pasivo"], c: 1, e: "Ej. Iniciador, coordinador." },
+        { q: "66. Rol en el equipo enfocado en el clima y relaciones:", a: ["Rol de mantenimiento/social", "Rol de tarea", "Rol crítico", "Rol experto"], c: 0, e: "Ej. Armonizador, animador." },
+        { q: "67. Tipo de conflicto funcional o positivo:", a: ["Destructivo", "Constructivo", "Personal", "Violento"], c: 1, e: "Mejora el desempeño y la creatividad." },
+        { q: "68. Estrategia de manejo de conflictos 'Ganar-Ganar':", a: ["Evasión", "Colaboración/Integración", "Competencia", "Sumisión"], c: 1, e: "Busca satisfacer a ambas partes." },
+        { q: "69. Grado de atracción que sienten los miembros hacia el grupo:", a: ["Cohesión", "Dispersión", "Normas", "Estatus"], c: 0, e: "El 'pegamento' del equipo." },
+        { q: "70. Reglas de comportamiento aceptadas por el grupo:", a: ["Leyes", "Normas", "Roles", "Metas"], c: 1, e: "Estándares de conducta." },
+        { q: "71. Pensamiento grupal (Groupthink) es:", a: ["Pensar bien", "Tendencia a conformarse y no criticar para evitar conflictos", "Creatividad", "Debate"], c: 1, e: "Fenómeno negativo, reduce la calidad de decisiones." },
+        { q: "72. Técnica creativa para generar muchas ideas en grupo:", a: ["Debate", "Lluvia de ideas (Brainstorming)", "Entrevista", "Encuesta"], c: 1, e: "Cantidad sobre calidad inicialmente." },
+        { q: "73. Equipo autodirigido:", a: ["Tiene un jefe externo", "Se gestiona a sí mismo sin supervisión directa", "No tiene metas", "Es temporal"], c: 1, e: "Alta autonomía." },
+        { q: "74. Ventaja del trabajo en equipo:", a: ["Mayor lentitud", "Diversidad de perspectivas", "Dilución de responsabilidad", "Conflictos personales"], c: 1, e: "Enriquece la solución." },
+        { q: "75. Desventaja potencial del trabajo en equipo:", a: ["Sinergia", "Ocio social (algunos trabajan menos)", "Rapidez", "Apoyo"], c: 1, e: "El efecto 'polizón'." },
+        { q: "76. Comunicación asertiva en el equipo evita:", a: ["El éxito", "Malentendidos y resentimientos", "La claridad", "La colaboración"], c: 1, e: "Es fundamental para la salud del equipo." },
+        { q: "77. Rol negativo en un equipo:", a: ["Coordinador", "Obstructor/Agresor", "Evaluador", "Secretario"], c: 1, e: "Ataca o bloquea el progreso." },
+        { q: "78. La confianza es base para:", a: ["El conflicto", "El trabajo en equipo efectivo", "La burocracia", "El control"], c: 1, e: "Sin confianza no hay equipo." },
+        { q: "79. Equipos virtuales:", a: ["No existen", "Usan tecnología para trabajar a distancia", "Son menos efectivos", "Son solo para juegos"], c: 1, e: "Comunes hoy en día." },
+        { q: "80. Consenso significa:", a: ["Votación", "Que el jefe decida", "Acuerdo general aceptado por todos", "Unanimidad total obligatoria"], c: 2, e: "Todos pueden vivir con la decisión." },
+
+        // --- UNIDAD 4: TOMA DE DECISIONES (81-100) ---
+        { q: "81. Proceso de elegir entre varias alternativas:", a: ["Planeación", "Toma de decisiones", "Control", "Dirección"], c: 1, e: "Esencia de la labor directiva." },
+        { q: "82. Primer paso en el proceso de toma de decisiones:", a: ["Evaluar alternativas", "Identificar el problema", "Implementar", "Recopilar datos"], c: 1, e: "Saber qué se va a resolver." },
+        { q: "83. Decisión programada:", a: ["Es nueva y compleja", "Es repetitiva y rutinaria", "Requiere mucha creatividad", "Es de alto riesgo"], c: 1, e: "Ya existen reglas para ella (ej. inventario)." },
+        { q: "84. Decisión no programada:", a: ["Rutinaria", "Única, nueva y compleja", "Fácil", "Automática"], c: 1, e: "Requiere juicio y análisis específico." },
+        { q: "85. Modelo racional de toma de decisiones asume:", a: ["Que tenemos información perfecta y somos lógicos", "Que somos emocionales", "Que decidimos al azar", "Que no sabemos nada"], c: 0, e: "El ideal teórico." },
+        { q: "86. Racionalidad limitada (Herbert Simon):", a: ["Somos tontos", "Decidimos con información incompleta y capacidad limitada", "Somos máquinas", "Siempre acertamos"], c: 1, e: "La realidad humana." },
+        { q: "87. Técnica de los 'Seis Sombreros para Pensar' (De Bono):", a: ["Usar sombreros reales", "Analizar un problema desde diferentes perspectivas", "Ocultar ideas", "Votar"], c: 1, e: "Fomenta el pensamiento lateral." },
+        { q: "88. Sombrero Rojo en la técnica de De Bono representa:", a: ["Hechos", "Emociones e intuición", "Peligros", "Creatividad"], c: 1, e: "El aspecto emocional." },
+        { q: "89. Diagrama de Ishikawa (Causa-Efecto) sirve para:", a: ["Ver el futuro", "Identificar causas raíz de un problema", "Hacer organigramas", "Calcular costos"], c: 1, e: "También llamado espina de pescado." },
+        { q: "90. Principio de Pareto (80/20):", a: ["El 80% de problemas viene del 20% de causas", "Trabajar 20%", "Ganar 80%", "Es una ley física"], c: 0, e: "Ayuda a priorizar." },
+        { q: "91. FODA (SWOT) analiza:", a: ["Solo finanzas", "Fortalezas, Oportunidades, Debilidades, Amenazas", "Personal", "Ventas"], c: 1, e: "Herramienta de diagnóstico estratégico." },
+        { q: "92. Riesgo en la toma de decisiones:", a: ["Certeza total", "Probabilidad de resultados negativos", "No tomar decisiones", "Éxito asegurado"], c: 1, e: "Incertidumbre sobre el resultado." },
+        { q: "93. Intuición en la toma de decisiones:", a: ["Adivinanza", "Conocimiento inconsciente basado en experiencia", "Error", "Brujería"], c: 1, e: "Útil cuando falta tiempo o datos." },
+        { q: "94. Sesgo de confirmación:", a: ["Buscar solo información que apoya lo que ya creemos", "Revisar todo", "Ser objetivo", "Dudar de todo"], c: 0, e: "Error común al decidir." },
+        { q: "95. Parálisis por análisis:", a: ["No poder moverse", "Pensar tanto que no se decide nada", "Analizar rápido", "Ser muy efectivo"], c: 1, e: "Exceso de información bloquea la acción." },
+        { q: "96. Decisión por mayoría:", a: ["Todos están de acuerdo", "Gana la opción con más votos (50% + 1)", "Decide el jefe", "Nadie decide"], c: 1, e: "Método democrático rápido." },
+        { q: "97. Costo de oportunidad:", a: ["Lo que cuesta un producto", "El valor de la mejor opción no elegida", "Pérdida de dinero", "Ganancia total"], c: 1, e: "Lo que sacrificas al decidir." },
+        { q: "98. Ética en la toma de decisiones:", a: ["No importa", "Considerar qué es correcto y justo", "Ganar a toda costa", "Seguir la ley solamente"], c: 1, e: "Impacto moral de la decisión." },
+        { q: "99. Implementación de la decisión:", a: ["Pensar qué hacer", "Poner en práctica la alternativa elegida", "Olvidar el problema", "Culpar a otros"], c: 1, e: "Paso crucial después de decidir." },
+        { q: "100. Evaluación de resultados:", a: ["Ver si la decisión resolvió el problema", "Criticar", "No hacer nada", "Repetir el error"], c: 0, e: "El paso final para aprender." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        // MathJax
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

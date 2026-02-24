@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inglés II</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #002395; /* Azul Royal / UK-US Flag */
+            --secondary-color: #c8102e; /* Rojo Intenso */
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #2d2d2d;
+            --success: #2e7d32;
+            --error: #c62828;
+            --warning: #f57f17;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #dceefb;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--secondary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 2rem; }
+        .header h2 { color: var(--secondary-color); margin: 10px 0 0; font-weight: 600; font-size: 1.2rem; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--primary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; display: block; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #e1dfdd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: var(--success); }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: var(--error); }
+        .feedback.unanswered { background: #fff8e1; border-left: 4px solid var(--warning); color: #ef6c00; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 35, 149, 0.3);
+            transition: 0.3s;
+        }
+        #submitBtn:hover { background: #00155e; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 30px;
+            display: none;
+            border-top: 6px solid var(--secondary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulator: English II </h1>
+    <p>Grammar • Vocabulary • Reading Comprehension</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // ENGLISH II QUESTION BANK (100 Questions)
+    const questions = [
+        // --- SECTION 1: PRESENT SIMPLE VS PRESENT CONTINUOUS (1-20) ---
+        { q: "1. Look! It ________ outside.", a: ["rains", "is raining", "rain", "raining"], c: 1, e: "Action happening right now (Look!). Use Present Continuous." },
+        { q: "2. I usually ________ coffee for breakfast, but today I am drinking tea.", a: ["drink", "am drinking", "drinks", "drank"], c: 0, e: "Routine/Habit (Usually) = Present Simple." },
+        { q: "3. She ________ speak French very well.", a: ["isn't", "don't", "doesn't", "not"], c: 2, e: "Negative Present Simple for 3rd person singular (She) = Doesn't." },
+        { q: "4. What ________ you doing right now?", a: ["do", "are", "is", "does"], c: 1, e: "Question in Present Continuous requires verb 'to be'." },
+        { q: "5. Water ________ at 100 degrees Celsius.", a: ["boil", "is boiling", "boils", "boiling"], c: 2, e: "Scientific fact / General truth = Present Simple." },
+        { q: "6. Be quiet! The baby ________.", a: ["sleeps", "slept", "is sleeping", "are sleeping"], c: 2, e: "Action happening at the moment of speaking." },
+        { q: "7. How often ________ you go to the gym?", a: ["do", "are", "does", "is"], c: 0, e: "Frequency question = Present Simple." },
+        { q: "8. He ________ like vegetables.", a: ["don't", "doesn't", "isn't", "not"], c: 1, e: "3rd person negative preference." },
+        { q: "9. We ________ for our exam at the moment.", a: ["study", "are studying", "studies", "is studying"], c: 1, e: "Time expression 'at the moment' indicates Continuous." },
+        { q: "10. My parents ________ in New York.", a: ["live", "lives", "is living", "living"], c: 0, e: "Permanent state = Present Simple." },
+        { q: "11. ________ she working today?", a: ["Do", "Does", "Is", "Are"], c: 2, e: "Present Continuous Question: Is she + -ing?" },
+        { q: "12. They rarely ________ TV in the morning.", a: ["watch", "are watching", "watches", "watching"], c: 0, e: "Adverb of frequency 'rarely' indicates Routine." },
+        { q: "13. Listen! Someone ________ the violin.", a: ["play", "plays", "is playing", "are playing"], c: 2, e: "Happening now." },
+        { q: "14. I ________ understand this math problem.", a: ["am not", "don't", "doesn't", "not"], c: 1, e: "Stative verbs (like understand) usually take Simple." },
+        { q: "15. Where ________ your brother work?", a: ["do", "does", "is", "are"], c: 1, e: "Fact about routine." },
+        { q: "16. Why ________ you wearing a coat? It's hot!", a: ["do", "does", "are", "is"], c: 2, e: "Action happening now (wearing)." },
+        { q: "17. The train ________ at 9:00 PM every night.", a: ["leave", "leaves", "is leaving", "leaving"], c: 1, e: "Timetables/Schedules use Present Simple." },
+        { q: "18. I ________ to buy a new car soon.", a: ["want", "am wanting", "wants", "wanted"], c: 0, e: "'Want' is a stative verb, rarely used in continuous." },
+        { q: "19. Who ________ that man standing over there?", a: ["do", "is", "does", "are"], c: 1, e: "Verb to be (Identity)." },
+        { q: "20. They ________ dinner right now.", a: ["have", "having", "are having", "has"], c: 2, e: "Action in progress." },
+
+        // --- SECTION 2: PAST SIMPLE VS PAST CONTINUOUS (21-45) ---
+        { q: "21. I ________ TV when the phone rang.", a: ["watched", "was watching", "were watching", "am watching"], c: 1, e: "Long action interrupted by short action." },
+        { q: "22. She ________ to Paris last year.", a: ["go", "goes", "went", "gone"], c: 2, e: "Completed action in the past." },
+        { q: "23. They ________ play soccer yesterday.", a: ["didn't", "don't", "wasn't", "weren't"], c: 0, e: "Negative Past Simple uses 'didn't'." },
+        { q: "24. While I was sleeping, my brother ________ video games.", a: ["plays", "played", "was playing", "is playing"], c: 2, e: "Parallel actions in the past (While)." },
+        { q: "25. We ________ at home last night.", a: ["didn't", "weren't", "wasn't", "aren't"], c: 1, e: "Verb to be in past (We were/weren't)." },
+        { q: "26. When ________ you see him?", a: ["did", "do", "were", "was"], c: 0, e: "Question in Past Simple uses 'Did'." },
+        { q: "27. He ________ his leg while he was skiing.", a: ["break", "broke", "was breaking", "broken"], c: 1, e: "Short interruption action (broke) during long action." },
+        { q: "28. I ________ study for the test last night.", a: ["don't", "didn't", "wasn't", "not"], c: 1, e: "Negative past action." },
+        { q: "29. What ________ you doing at 8 PM yesterday?", a: ["did", "do", "were", "was"], c: 2, e: "Specific time in the past implies Continuous." },
+        { q: "30. Mozart ________ more than 600 pieces of music.", a: ["write", "wrote", "written", "was writing"], c: 1, e: "Completed life event (Historical fact)." },
+        { q: "31. It ________ raining when I left the house.", a: ["is", "was", "were", "did"], c: 1, e: "Description of background events in the past." },
+        { q: "32. Where ________ you born?", a: ["did", "was", "were", "are"], c: 2, e: "Standard phrase: 'Where were you born?'" },
+        { q: "33. I ________ very happy yesterday.", a: ["was", "were", "did", "am"], c: 0, e: "I was (Verb to be past)." },
+        { q: "34. They ________ walking to school when they saw the accident.", a: ["was", "were", "did", "are"], c: 1, e: "Past Continuous plural." },
+        { q: "35. Did you ________ the movie?", a: ["liked", "like", "likes", "liking"], c: 1, e: "After 'Did', use the base form of the verb." },
+        { q: "36. The teacher ________ talking when the bell rang.", a: ["stopped", "was stopping", "stops", "stop"], c: 0, e: "Sequence of events." },
+        { q: "37. We ________ a lot of photos on our vacation.", a: ["taked", "took", "taken", "taking"], c: 1, e: "Irregular past of 'take' is 'took'." },
+        { q: "38. While mom was cooking, dad ________ the paper.", a: ["read", "is reading", "was reading", "reads"], c: 2, e: "Parallel actions." },
+        { q: "39. Who ________ the telephone?", a: ["invent", "invented", "invents", "was inventing"], c: 1, e: "Historical fact (Bell invented it)." },
+        { q: "40. I ________ see you at the party.", a: ["didn't", "wasn't", "don't", "not"], c: 0, e: "Negative Past Simple." },
+        { q: "41. Shakespeare ________ in 1616.", a: ["die", "died", "dies", "dying"], c: 1, e: "Past event." },
+        { q: "42. She ________ a book when the lights went out.", a: ["read", "reads", "was reading", "is reading"], c: 2, e: "Interrupted action." },
+        { q: "43. We ________ pizza last Friday.", a: ["eat", "ate", "eaten", "eating"], c: 1, e: "Irregular past of 'eat' is 'ate'." },
+        { q: "44. ________ it snowing yesterday?", a: ["Did", "Was", "Were", "Is"], c: 1, e: "Past Continuous Question (Was it...?)." },
+        { q: "45. He didn't ________ to the beach.", a: ["go", "went", "gone", "going"], c: 0, e: "Auxiliary 'didn't' requires base verb." },
+
+        // --- SECTION 3: VOCABULARY & GRAMMAR (Health, Routine, Shopping) (46-70) ---
+        { q: "46. I have a headache. I ________ take an aspirin.", a: ["should", "shouldn't", "mustn't", "can't"], c: 0, e: "Recommendation/Advice." },
+        { q: "47. You ________ smoke in the hospital. It's prohibited.", a: ["should", "must", "mustn't", "don't have to"], c: 2, e: "Prohibition." },
+        { q: "48. 'How much' is used for ________ nouns.", a: ["Countable", "Uncountable", "Plural", "Singular"], c: 1, e: "E.g., How much water." },
+        { q: "49. There are ________ apples in the fridge.", a: ["any", "much", "some", "a little"], c: 2, e: "Positive sentence, countable plural." },
+        { q: "50. Is there ________ milk left?", a: ["some", "many", "any", "few"], c: 2, e: "Question form usually uses 'any'." },
+        { q: "51. We don't have ________ time.", a: ["many", "much", "some", "few"], c: 1, e: "Time is uncountable in this context." },
+        { q: "52. My tooth hurts. I need to see a ________.", a: ["doctor", "dentist", "nurse", "vet"], c: 1, e: "Specialist for teeth." },
+        { q: "53. I want to buy a pair of ________.", a: ["jeans", "shirt", "t-shirt", "hat"], c: 0, e: "'Pair of' is used for plural nouns like jeans, shoes, glasses." },
+        { q: "54. This shirt is too small. Do you have a larger ________?", a: ["color", "price", "size", "fabric"], c: 2, e: "Size refers to S, M, L, XL." },
+        { q: "55. A bakery sells ________.", a: ["meat", "bread", "medicine", "books"], c: 1, e: "Definition of bakery." },
+        { q: "56. Which is healthy food?", a: ["Burger", "Fries", "Vegetables", "Soda"], c: 2, e: "General health knowledge." },
+        { q: "57. The past participle of 'go' is:", a: ["went", "gone", "going", "goes"], c: 1, e: "Go - Went - Gone." },
+        { q: "58. You ________ study hard if you want to pass.", a: ["has to", "have to", "having to", "had"], c: 1, e: "Obligation (External)." },
+        { q: "59. ________ sugar do you want in your coffee?", a: ["How many", "How much", "How often", "How long"], c: 1, e: "Sugar is uncountable." },
+        { q: "60. I have a cold. I have a runny ________.", a: ["head", "stomach", "nose", "leg"], c: 2, e: "Symptom of a cold." },
+        { q: "61. Where can I buy medicine?", a: ["Library", "Pharmacy / Drugstore", "Butcher's", "Gym"], c: 1, e: "Place for medicine." },
+        { q: "62. 'Cheap' is the opposite of:", a: ["Expensive", "Big", "Small", "Good"], c: 0, e: "Adjective opposites." },
+        { q: "63. Can I pay ________ credit card?", a: ["in", "on", "by", "at"], c: 2, e: "Preposition: by credit card (or 'with a' credit card)." },
+        { q: "64. There aren't ________ chairs in the room.", a: ["some", "much", "any", "little"], c: 2, e: "Negative plural sentence." },
+        { q: "65. 'A lot of' can be used with:", a: ["Only countable", "Only uncountable", "Both", "Neither"], c: 2, e: "It is versatile." },
+        { q: "66. When you have a fever, your body is:", a: ["Cold", "Hot", "Tired", "Hungry"], c: 1, e: "Symptom of fever." },
+        { q: "67. He ________ to wake up early tomorrow.", a: ["have", "has", "must", "should"], c: 1, e: "3rd person obligation (has to)." },
+        { q: "68. A person who serves you in a shop is a:", a: ["Customer", "Shop assistant", "Manager", "Chef"], c: 1, e: "Job vocabulary." },
+        { q: "69. 'Any' is typically used in:", a: ["Positive sentences", "Questions and Negatives", "Commands", "All sentences"], c: 1, e: "Standard grammar rule." },
+        { q: "70. I am ________ (hungry). I need food.", a: ["starving", "thirsty", "tired", "angry"], c: 0, e: "Starving means very hungry." },
+
+        // --- SECTION 4: READING & USE OF ENGLISH (71-100) ---
+        { q: "71. Complete: I ________ breakfast at 7:00 AM yesterday.", a: ["have", "has", "had", "having"], c: 2, e: "Past simple of 'have breakfast'." },
+        { q: "72. Which sentence is correct?", a: ["She don't like pizza.", "She doesn't like pizza.", "She no like pizza.", "She not like pizza."], c: 1, e: "3rd person negative." },
+        { q: "73. Which sentence is correct?", a: ["I was play soccer.", "I played soccer.", "I were playing soccer.", "I playing soccer."], c: 1, e: "Past Simple structure." },
+        { q: "74. Complete: While he ________, he fell asleep.", a: ["reads", "read", "was reading", "is reading"], c: 2, e: "Action in progress." },
+        { q: "75. Synonym for 'ill':", a: ["Happy", "Sick", "Healthy", "Strong"], c: 1, e: "Vocabulary." },
+        { q: "76. Complete: There is ________ water in the bottle.", a: ["a few", "many", "a little", "any"], c: 2, e: "Water is uncountable (a little)." },
+        { q: "77. Choose the correct question:", a: ["Where you went?", "Where did you go?", "Where you go?", "Where did you went?"], c: 1, e: "Auxiliary 'did' + base verb." },
+        { q: "78. Complete: You ________ wear a uniform to school. It's a rule.", a: ["have to", "should", "might", "can"], c: 0, e: "Rule/Obligation." },
+        { q: "79. Biography: Frida Kahlo ________ a famous Mexican painter.", a: ["is", "was", "were", "did"], c: 1, e: "Past state." },
+        { q: "80. She ________ born in 1907.", a: ["is", "was", "did", "borned"], c: 1, e: "Passive structure 'was born'." },
+        { q: "81. Buying: 'How ________ is this sweater?'", a: ["many", "much", "price", "cost"], c: 1, e: "Asking for price." },
+        { q: "82. Health: If you have a toothache, you ________ eat sweets.", a: ["should", "shouldn't", "must", "have to"], c: 1, e: "Advice against something." },
+        { q: "83. Plural of 'Person':", a: ["Persons", "People", "Peoples", "Persones"], c: 1, e: "Irregular plural." },
+        { q: "84. Plural of 'Child':", a: ["Childs", "Children", "Childrens", "Kid"], c: 1, e: "Irregular plural." },
+        { q: "85. Complete: I ________ a shower when the phone rang.", a: ["had", "was having", "have", "am having"], c: 1, e: "Interrupted action." },
+        { q: "86. Past of 'buy':", a: ["buyed", "bought", "brought", "buying"], c: 1, e: "Irregular verb." },
+        { q: "87. Past of 'think':", a: ["thinked", "thought", "thaught", "thinking"], c: 1, e: "Irregular verb." },
+        { q: "88. Opposite of 'Start':", a: ["Begin", "Finish", "Go", "Play"], c: 1, e: "Vocabulary." },
+        { q: "89. Complete: She ________ yoga twice a week.", a: ["do", "does", "doing", "make"], c: 1, e: "Routine (She does)." },
+        { q: "90. Complete: We ________ enjoying the party.", a: ["aren't", "don't", "doesn't", "isn't"], c: 0, e: "Negative Present Continuous." },
+        { q: "91. Correct order: usually / breakfast / I / eat / .", a: ["I usually eat breakfast.", "I eat usually breakfast.", "Usually I eat breakfast.", "I eat breakfast usually."], c: 0, e: "Adverb of frequency goes before the main verb." },
+        { q: "92. Correct order: yesterday / ? / did / go / you / where", a: ["Where you did go yesterday?", "Where did you go yesterday?", "Did you go where yesterday?", "Where went you yesterday?"], c: 1, e: "WH + Aux + Subject + Verb." },
+        { q: "93. 'Fantastic' is a:", a: ["Noun", "Verb", "Adjective", "Adverb"], c: 2, e: "Parts of speech." },
+        { q: "94. 'Quickly' is a:", a: ["Noun", "Verb", "Adjective", "Adverb"], c: 3, e: "Describes how something is done." },
+        { q: "95. Complete: This is ________ interesting book.", a: ["a", "an", "the", "some"], c: 1, e: "Article before vowel sound." },
+        { q: "96. Comparison: An elephant is ________ than a mouse.", a: ["big", "biger", "bigger", "biggest"], c: 2, e: "Comparative adjective (double g)." },
+        { q: "97. Superlative: The Pacific is the ________ ocean.", a: ["deep", "deeper", "deepest", "most deep"], c: 2, e: "Superlative form." },
+        { q: "98. Complete: I am interested ________ history.", a: ["on", "in", "at", "for"], c: 1, e: "Preposition phrase 'interested in'." },
+        { q: "99. Complete: She is good ________ math.", a: ["in", "on", "at", "for"], c: 2, e: "Preposition phrase 'good at'." },
+        { q: "100. Choose the correct sentence:", a: ["I no have money.", "I don't have no money.", "I don't have any money.", "I haven't money."], c: 2, e: "Correct negative structure." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            // Question
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerText = item.q; // Using innerText for security
+            card.appendChild(qTitle);
+
+            // Options
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerText = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            // Feedback
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Unanswered.</strong> Correct answer: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>Correct!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrect.</strong> Correct answer: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerText = `Final Score: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

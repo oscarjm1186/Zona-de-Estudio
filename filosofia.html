@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filosofía II (Lógica)</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #004d40; /* Verde Pizarra / Académico */
+            --secondary-color: #00796b; /* Verde Azulado */
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-main: #212121;
+            --success: #388e3c;
+            --error: #d32f2f;
+            --warning: #fbc02d;
+        }
+
+        body {
+            font-family: 'Garamond', 'Georgia', serif; /* Tipografía clásica para Filosofía */
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        /* Barra de Progreso */
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #b2dfdb;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 4px double var(--primary-color);
+            margin-top: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 2.2rem; letter-spacing: 1px; }
+        .header h2 { color: var(--secondary-color); margin: 10px 0 0; font-weight: normal; font-size: 1.2rem; font-style: italic; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--secondary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; display: block; font-family: 'Segoe UI', sans-serif; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .options label:hover {
+            background: #e0f2f1;
+            border-color: var(--secondary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: #1b5e20; }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: #b71c1c; }
+        .feedback.unanswered { background: #fffde7; border-left: 4px solid var(--warning); color: #f57f17; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 2px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 77, 64, 0.3);
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #submitBtn:hover { background: #00251a; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 30px;
+            background: white;
+            border-radius: 4px;
+            margin-top: 30px;
+            display: none;
+            border: 2px solid var(--secondary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Filosofía II </h1>
+    <p>Pensamiento • Juicio • Silogismo • Lógica Simbólica</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    // BANCO DE 100 PREGUNTAS - LÓGICA (FILOSOFÍA II)
+    const questions = [
+        // --- UNIDAD 1: INTRODUCCIÓN A LA LÓGICA (1-15) ---
+        { q: "1. Etimológicamente, la palabra 'Lógica' proviene del griego 'Logos', que significa:", a: ["Mito", "Pensamiento, palabra, razón", "Sabiduría", "Amor"], c: 1, e: "Logos abarca razón, discurso y pensamiento ordenado." },
+        { q: "2. La Lógica es la ciencia que estudia:", a: ["El origen del universo", "La estructura o forma del pensamiento correcto", "La conducta humana", "Los procesos químicos del cerebro"], c: 1, e: "Se enfoca en la validez formal, no en el contenido empírico." },
+        { q: "3. ¿Quién es considerado el 'Padre de la Lógica'?", a: ["Platón", "Sócrates", "Aristóteles", "Descartes"], c: 2, e: "Sistematizó la lógica en su obra 'El Órganon'." },
+        { q: "4. Tipo de lógica que estudia la estructura del pensamiento (Concepto, Juicio, Raciocinio):", a: ["Lógica Formal", "Lógica Material", "Lógica Dialéctica", "Lógica Matemática"], c: 0, e: "Se interesa por la forma correcta, no necesariamente por la verdad del contenido." },
+        { q: "5. Factor del pensamiento que consiste en la expresión oral o escrita (lenguaje):", a: ["Sujeto pensante", "Objeto", "Forma", "Expresión"], c: 3, e: "Es el vehículo mediante el cual se comunica el pensamiento." },
+        { q: "6. Principio lógico que afirma: 'Una cosa es idéntica a sí misma' (A es A):", a: ["No contradicción", "Identidad", "Tercero excluido", "Razón suficiente"], c: 1, e: "Principio fundamental ontológico y lógico." },
+        { q: "7. Principio lógico que dice: 'Es imposible que algo sea y no sea al mismo tiempo y bajo el mismo aspecto':", a: ["Identidad", "No contradicción", "Causalidad", "Tercero excluido"], c: 1, e: "Base de la coherencia lógica." },
+        { q: "8. ¿Qué es la 'Verdad' en lógica tradicional?", a: ["Lo que yo creo", "La adecuación de la mente con la realidad", "Un sentimiento", "La validez formal"], c: 1, e: "Definición de verdad lógica o adecuación." },
+        { q: "9. Diferencia entre 'Pensar' y 'Pensamiento':", a: ["No hay diferencia", "Pensar es la actividad (psicológica) y Pensamiento es el resultado (lógico)", "Pensar es lógico y Pensamiento es psicológico", "Ambos son físicos"], c: 1, e: "La lógica estudia el resultado (pensamiento), no el proceso mental." },
+        { q: "10. La lógica es un instrumento (Órganon) para:", a: ["Las ciencias", "El arte", "La religión", "La moral"], c: 0, e: "Es la herramienta propedéutica para todas las ciencias." },
+        { q: "11. Principio de 'Razón Suficiente' fue propuesto por:", a: ["Aristóteles", "Leibniz", "Kant", "Hume"], c: 1, e: "Todo lo que existe tiene una razón de ser." },
+        { q: "12. Objeto material de la lógica:", a: ["Los números", "Las palabras", "El pensamiento en general", "La naturaleza"], c: 2, e: "Estudia el pensamiento humano." },
+        { q: "13. Objeto formal de la lógica:", a: ["El cerebro", "Las formas mentales (validez)", "La psicología", "La gramática"], c: 1, e: "Estudia la estructura (rectitud) del pensamiento." },
+        { q: "14. Utilidad de la lógica en la vida diaria:", a: ["Ganar discusiones", "Detectar falacias y razonar correctamente", "Ser más inteligente", "Memorizar datos"], c: 1, e: "Ayuda a evitar errores en la argumentación." },
+        { q: "15. ¿Qué distingue a la Lógica Natural de la Lógica Científica?", a: ["Una es innata y la otra se estudia", "Una es falsa y la otra verdadera", "No hay diferencia", "Una es de animales y otra de humanos"], c: 0, e: "Todos tenemos lógica natural; la científica perfecciona esa capacidad." },
+
+        // --- UNIDAD 2: EL CONCEPTO (16-35) ---
+        { q: "16. Primera forma mental, es la representación intelectual de un objeto sin afirmar ni negar nada:", a: ["Juicio", "Raciocinio", "Concepto (Idea)", "Imagen"], c: 2, e: "Es la 'aprehensión' de la esencia." },
+        { q: "17. Operación mental que da origen al concepto:", a: ["Juicio", "Abstracción", "Deducción", "Imaginación"], c: 1, e: "Separar mentalmente las características esenciales del objeto." },
+        { q: "18. Características esenciales son:", a: ["Las que pueden faltar sin que cambie el objeto", "Las que hacen que el objeto sea lo que es", "El color y tamaño", "Las accidentales"], c: 1, e: "Sin ellas, el objeto deja de ser ese objeto." },
+        { q: "19. La expresión verbal del concepto es el:", a: ["Término (Palabra)", "Enunciado", "Argumento", "Silogismo"], c: 0, e: "La palabra materializa el concepto." },
+        { q: "20. Ley de la Extensión y la Comprensión:", a: ["A mayor extensión, mayor comprensión", "A mayor extensión, menor comprensión", "Son iguales", "No tienen relación"], c: 1, e: "Relación inversa. Ej: 'Animal' (mucha extensión) vs 'Perro Chihuahua' (mucha comprensión)." },
+        { q: "21. Propiedad del concepto que se refiere al número de individuos a los que se aplica:", a: ["Comprensión", "Extensión", "Contenido", "Cualidad"], c: 1, e: "Ej. Universal, Particular, Singular." },
+        { q: "22. Propiedad del concepto que se refiere a las notas o características que contiene:", a: ["Comprensión (Intensión)", "Extensión", "Cantidad", "Predicado"], c: 0, e: "Lo que significa el concepto." },
+        { q: "23. Concepto 'Hombre' comparado con 'Europeo':", a: ["Hombre tiene mayor extensión", "Europeo tiene mayor extensión", "Tienen igual extensión", "No son comparables"], c: 0, e: "Hay más hombres que europeos." },
+        { q: "24. Según su extensión, los conceptos se clasifican en:", a: ["Claros y oscuros", "Universales, Particulares, Singulares", "Simples y compuestos", "Abstractos y concretos"], c: 1, e: "Universal (Todos), Particular (Algunos), Singular (Uno)." },
+        { q: "25. Los 5 Predicables (modos de predicar) según Porfirio son:", a: ["Sujeto, verbo, predicado", "Género, Especie, Diferencia, Propio, Accidente", "A, E, I, O, U", "Materia y Forma"], c: 1, e: "El Árbol de Porfirio clasifica estas relaciones." },
+        { q: "26. Predicable que indica la esencia completa del sujeto (lo que es):", a: ["Género", "Especie", "Accidente", "Propiedad"], c: 1, e: "Ej. El hombre es un 'animal racional' (Especie)." },
+        { q: "27. Predicable que indica una característica no esencial (puede cambiar):", a: ["Diferencia específica", "Especie", "Accidente", "Género"], c: 2, e: "Ej. 'El hombre es blanco' (el color es accidente)." },
+        { q: "28. Concepto 'Árbol' es:", a: ["Singular", "Universal", "Colectivo", "Privativo"], c: 1, e: "Se aplica a todos los árboles." },
+        { q: "29. Concepto 'Ejército' es:", a: ["Singular", "Colectivo", "Simple", "Abstracto"], c: 1, e: "Grupo de individuos considerados como unidad." },
+        { q: "30. Diferencia entre 'Idea' e 'Imagen':", a: ["La imagen es particular y sensible; la idea es universal y abstracta", "Son lo mismo", "La idea se ve con los ojos", "La imagen se piensa"], c: 0, e: "La imagen es física/imaginaria (este perro), la idea es intelectual (el concepto perro)." },
+        { q: "31. ¿Qué es el 'Término análogo'?", a: ["Tiene un solo significado", "Tiene varios significados totalmente distintos", "Tiene significados diferentes pero relacionados", "No significa nada"], c: 2, e: "Ej. Pata (de animal) y Pata (de mesa)." },
+        { q: "32. ¿Qué es el 'Término equívoco'?", a: ["Tiene un solo significado", "Tiene varios significados sin relación entre sí", "Significa lo mismo", "Es claro"], c: 1, e: "Ej. Gato (animal) y Gato (herramienta)." },
+        { q: "33. Concepto 'Bondad' es:", a: ["Concreto", "Abstracto", "Colectivo", "Singular"], c: 1, e: "Representa una cualidad separada del sujeto." },
+        { q: "34. En la definición 'El hombre es un animal racional', 'Animal' es el:", a: ["Género próximo", "Diferencia específica", "Accidente", "Propio"], c: 0, e: "Clase superior inmediata." },
+        { q: "35. Regla de la definición:", a: ["Debe ser negativa", "Lo definido no debe entrar en la definición", "Debe ser metafórica", "Debe ser muy larga"], c: 1, e: "No puedes definir 'Sol' diciendo 'es un Sol...'." },
+
+        // --- UNIDAD 3: EL JUICIO (36-55) ---
+        { q: "36. Segunda forma mental que afirma o niega algo:", a: ["Concepto", "Juicio", "Raciocinio", "Silogismo"], c: 1, e: "Su expresión verbal es la Proposición o Enunciado." },
+        { q: "37. Elementos del juicio:", a: ["Premisa y conclusión", "Sujeto, Cópula (Verbo) y Predicado", "Antecedente y consecuente", "Imagen e idea"], c: 1, e: "Estructura S es P." },
+        { q: "38. ¿Qué determina la 'Cualidad' de un juicio?", a: ["Si es Universal o Particular", "Si es Afirmativo o Negativo", "Si es Verdadero o Falso", "Si es Necesario o Contingente"], c: 1, e: "Afirma o niega." },
+        { q: "39. ¿Qué determina la 'Cantidad' de un juicio?", a: ["Si es Afirmativo o Negativo", "Si es Universal o Particular", "Si es Verdadero o Falso", "Si es largo o corto"], c: 1, e: "El número de individuos que abarca (Todos o Algunos)." },
+        { q: "40. Símbolo del juicio Universal Afirmativo:", a: ["A", "E", "I", "O"], c: 0, e: "Proviene de AFIRMO (A, I)." },
+        { q: "41. Símbolo del juicio Universal Negativo:", a: ["A", "E", "I", "O"], c: 1, e: "Proviene de NIEGO (E, O)." },
+        { q: "42. Símbolo del juicio Particular Afirmativo:", a: ["A", "E", "I", "O"], c: 2, e: "Proviene de AFIRMO (segunda vocal)." },
+        { q: "43. Símbolo del juicio Particular Negativo:", a: ["A", "E", "I", "O"], c: 3, e: "Proviene de NIEGO (segunda vocal)." },
+        { q: "44. 'Todos los hombres son mortales' es un juicio tipo:", a: ["A", "E", "I", "O"], c: 0, e: "Universal Afirmativo." },
+        { q: "45. 'Ningún pez vuela' es un juicio tipo:", a: ["A", "E", "I", "O"], c: 1, e: "Universal Negativo." },
+        { q: "46. 'Algunos estudiantes son aplicados' es un juicio tipo:", a: ["A", "E", "I", "O"], c: 2, e: "Particular Afirmativo." },
+        { q: "47. Cuadro de Oposición: Los juicios A y E son:", a: ["Contradictorios", "Contrarios", "Subcontrarios", "Subalternos"], c: 1, e: "Universales opuestos en cualidad. No pueden ser ambos verdaderos." },
+        { q: "48. Cuadro de Oposición: Los juicios A y O son:", a: ["Contradictorios", "Contrarios", "Subcontrarios", "Subalternos"], c: 0, e: "Opuestos en cantidad y cualidad. Si uno es V, el otro es F." },
+        { q: "49. Si 'Todos los hombres son buenos' (A) es Falso, su contradictoria 'Algunos hombres no son buenos' (O) es:", a: ["Verdadera", "Falsa", "Dudosa", "Imposible"], c: 0, e: "Ley de contradicción." },
+        { q: "50. Los juicios que expresan una necesidad (S debe ser P) son:", a: ["Asertóricos", "Problemáticos", "Apodícticos", "Negativos"], c: 2, e: "Modalidad necesaria." },
+        { q: "51. Juicio 'Quizás llueva mañana' es:", a: ["Apodíctico", "Asertórico", "Problemático", "Universal"], c: 2, e: "Expresa posibilidad." },
+        { q: "52. Conversión simple de 'Ningún hombre es piedra' (E):", a: ["Ninguna piedra es hombre", "Algún hombre es piedra", "Toda piedra es hombre", "No se puede"], c: 0, e: "En juicios E, sujeto y predicado se intercambian tal cual." },
+        { q: "53. ¿Qué es la Cópula en el juicio?", a: ["El sujeto", "El predicado", "El verbo (ser) que une", "La cantidad"], c: 2, e: "Establece la relación." },
+        { q: "54. Juicio Analítico (Kant):", a: ["El predicado añade información nueva", "El predicado ya está contenido en el sujeto", "Es a posteriori", "Es falso"], c: 1, e: "Ej. 'El triángulo tiene tres lados'." },
+        { q: "55. Juicio Sintético:", a: ["El predicado añade información nueva (experiencia)", "Es universal y necesario siempre", "No aporta conocimiento", "Es tautológico"], c: 0, e: "Ej. 'La mesa es verde'." },
+
+        // --- UNIDAD 4: EL RACIOCINIO Y SILOGISMO (56-80) ---
+        { q: "56. Tercera forma mental, obtiene un nuevo conocimiento a partir de otros previos:", a: ["Concepto", "Juicio", "Raciocinio (Razonamiento)", "Intuición"], c: 2, e: "Su expresión es el Argumento." },
+        { q: "57. Razonamiento que va de lo General a lo Particular:", a: ["Inducción", "Deducción", "Analogía", "Estadística"], c: 1, e: "Característico del silogismo." },
+        { q: "58. Razonamiento que va de lo Particular a lo General:", a: ["Inducción", "Deducción", "Silogismo", "Apodíctico"], c: 0, e: "Base de la ciencia experimental." },
+        { q: "59. Estructura del Silogismo Categórico:", a: ["2 premisas y 1 conclusión", "3 premisas", "1 premisa y 2 conclusiones", "Infinitas premisas"], c: 0, e: "Premisa Mayor, Menor y Conclusión." },
+        { q: "60. Término que aparece en las dos premisas pero NO en la conclusión:", a: ["Término Mayor (T)", "Término Menor (t)", "Término Medio (M)", "Cópula"], c: 2, e: "Sirve de puente o enlace." },
+        { q: "61. El Término Mayor (T) se encuentra en:", a: ["La premisa menor y el sujeto de la conclusión", "La premisa mayor y el predicado de la conclusión", "Solo en la conclusión", "En la premisa menor"], c: 1, e: "Es el predicado de la conclusión." },
+        { q: "62. Regla de los términos:", a: ["Deben ser cuatro", "Deben ser tres (Mayor, Medio, Menor)", "Deben ser dos", "No importa el número"], c: 1, e: "Si hay 4 términos (cuaternio terminorum), es una falacia." },
+        { q: "63. Regla de las premisas:", a: ["De dos premisas negativas no se concluye nada", "De dos premisas afirmativas sale una negativa", "De dos premisas particulares se concluye algo universal", "Siempre se concluye lo mayor"], c: 0, e: "Nada se sigue de dos negaciones." },
+        { q: "64. La conclusión siempre sigue la parte:", a: ["Más fuerte", "Más débil (particular o negativa)", "Afirmativa", "Universal"], c: 1, e: "Si hay una premisa particular, la conclusión será particular." },
+        { q: "65. Figura del silogismo donde el Término Medio es Sujeto en la Mayor y Predicado en la Menor (M-T, t-M):", a: ["Primera Figura", "Segunda Figura", "Tercera Figura", "Cuarta Figura"], c: 0, e: "Es la figura más perfecta (ej. Barbara)." },
+        { q: "66. Modo 'BARBARA' pertenece a la:", a: ["1a Figura", "2a Figura", "3a Figura", "4a Figura"], c: 0, e: "Todos los juicios son A (Universales Afirmativos)." },
+        { q: "67. Silogismo: 'Todos los hombres son mortales. Sócrates es hombre. Luego...'", a: ["Sócrates es inmortal", "Sócrates es mortal", "Todos son Sócrates", "Nada"], c: 1, e: "Conclusión válida." },
+        { q: "68. Figura donde el Término Medio es Predicado en ambas premisas:", a: ["Primera", "Segunda", "Tercera", "Cuarta"], c: 1, e: "Esquema: T-M, t-M." },
+        { q: "69. Sofisma o Falacia es:", a: ["Un razonamiento verdadero", "Un razonamiento incorrecto que parece correcto", "Una mentira simple", "Un juicio A"], c: 1, e: "Busca engañar o tiene error formal." },
+        { q: "70. Falacia 'Ad Hominem':", a: ["Atacar a la persona en lugar del argumento", "Apelar a la fuerza", "Apelar a la autoridad", "Apelar a la piedad"], c: 0, e: "Ej. 'Lo que dices es falso porque eres feo'." },
+        { q: "71. Falacia 'Ad Baculum':", a: ["Apelar a la piedad", "Apelar a la fuerza o amenaza", "Apelar al pueblo", "Apelar a la ignorancia"], c: 1, e: "Se impone la razón por el miedo." },
+        { q: "72. Falacia 'Ad Populum':", a: ["Lo que dice la mayoría es verdad", "Atacar a la persona", "Apelar a la fuerza", "Causa falsa"], c: 0, e: "Apelación a los sentimientos de la multitud." },
+        { q: "73. Silogismo condicional: 'Si llueve, me mojo. Llueve. Luego...'", a: ["No me mojo", "Me mojo", "Sale el sol", "Nada"], c: 1, e: "Modus Ponens (Afirma el antecedente)." },
+        { q: "74. Epiquerema es:", a: ["Un silogismo donde una premisa va acompañada de prueba", "Un silogismo sin conclusión", "Una falacia", "Un juicio"], c: 0, e: "Silogismo probatorio." },
+        { q: "75. Entimema es:", a: ["Silogismo completo", "Silogismo abreviado (calla una premisa)", "Cadena de silogismos", "Falacia"], c: 1, e: "Ej. 'Pienso, luego existo' (falta 'todo el que piensa existe')." },
+        { q: "76. Sorites es:", a: ["Una falacia", "Un encadenamiento de premisas donde el predicado de una es sujeto de la siguiente", "Un silogismo disyuntivo", "Una negación"], c: 1, e: "Cadena argumentativa." },
+        { q: "77. La Inducción completa:", a: ["Analiza todos los casos posibles", "Analiza solo algunos casos", "Es deductiva", "Es imposible"], c: 0, e: "Enumera todos los individuos de la clase." },
+        { q: "78. Analogía es un razonamiento basado en:", a: ["Semejanzas", "Certezas absolutas", "Leyes universales", "Contradicciones"], c: 0, e: "Va de lo particular a lo particular por similitud." },
+        { q: "79. La conclusión de una inducción incompleta es:", a: ["Necesaria", "Probable", "Falsa", "Imposible"], c: 1, e: "No garantiza verdad absoluta, solo probabilidad." },
+        { q: "80. Modus Tollens (Si P->Q, y No Q, entonces...):", a: ["P", "No P", "Q", "No Q"], c: 1, e: "Niega el consecuente para negar el antecedente." },
+
+        // --- UNIDAD 5: LÓGICA SIMBÓLICA (81-100) ---
+        { q: "81. La Lógica Simbólica utiliza:", a: ["Lenguaje natural", "Lenguaje artificial y símbolos", "Solo números", "Imágenes"], c: 1, e: "Para evitar ambigüedades del lenguaje común." },
+        { q: "82. Variable proposicional (enunciado simple) se representa con:", a: ["1, 2, 3", "p, q, r, s", "A, B, C", "+, -"], c: 1, e: "Convención estándar." },
+        { q: "83. Conectivo lógico de la Conjunción ('y'):", a: ["\\( \\vee \\)", "\\( \\wedge \\) (o &)", "\\( \\rightarrow \\)", "\\( \\leftrightarrow \\)"], c: 1, e: "Símbolo de 'y'." },
+        { q: "84. Conectivo lógico de la Disyunción ('o'):", a: ["\\( \\vee \\)", "\\( \\wedge \\)", "\\( \\rightarrow \\)", "\\( \\sim \\)"], c: 0, e: "Vel (latín) = V." },
+        { q: "85. Conectivo lógico de la Condicional ('Si... entonces'):", a: ["\\( \\leftrightarrow \\)", "\\( \\rightarrow \\) (o \\( \\supset \\))", "\\( \\vee \\)", "\\( \\wedge \\)"], c: 1, e: "Flecha hacia la derecha." },
+        { q: "86. Símbolo de la Negación ('no'):", a: ["\\( \\sim \\) (o \\( \\neg \\))", "\\( \\rightarrow \\)", "\\( \\vee \\)", "\\( = \\)"], c: 0, e: "Invierte el valor de verdad." },
+        { q: "87. En una tabla de verdad, la Conjunción (\\( p \\wedge q \\)) es verdadera SOLO si:", a: ["Ambas son verdaderas", "Una es verdadera", "Ambas son falsas", "La primera es falsa"], c: 0, e: "Exige verdad en ambos componentes." },
+        { q: "88. La Disyunción Inclusiva (\\( p \\vee q \\)) es falsa SOLO si:", a: ["Ambas son verdaderas", "Ambas son falsas", "Una es falsa", "La primera es verdadera"], c: 1, e: "Basta que una sea verdadera para ser V." },
+        { q: "89. La Condicional (\\( p \\rightarrow q \\)) es falsa SOLO si:", a: ["Antecedente V y Consecuente F", "Ambas V", "Ambas F", "Antecedente F y Consecuente V"], c: 0, e: "No se puede deducir falsedad de una verdad." },
+        { q: "90. Una proposición que es siempre verdadera en su tabla de verdad es una:", a: ["Contradicción", "Tautología", "Contingencia", "Falacia"], c: 1, e: "Verdad lógica necesaria." },
+        { q: "91. Una proposición que es siempre falsa en su tabla de verdad es una:", a: ["Tautología", "Contradicción", "Contingencia", "Probabilidad"], c: 1, e: "Falsedad lógica." },
+        { q: "92. Símbolo del Bicondicional ('si y solo si'):", a: ["\\( \\rightarrow \\)", "\\( \\leftrightarrow \\)", "\\( \\wedge \\)", "\\( \\vee \\)"], c: 1, e: "Equivalencia." },
+        { q: "93. Ley de Morgan (Negación de la conjunción): \\( \\sim(p \\wedge q) \\) equivale a:", a: ["\\( \\sim p \\wedge \\sim q \\)", "\\( \\sim p \\vee \\sim q \\)", "\\( p \\vee q \\)", "\\( \\sim p \\rightarrow q \\)"], c: 1, e: "Niega las partes y cambia el operador." },
+        { q: "94. ¿Cuántas filas tiene una tabla de verdad con 3 variables (p, q, r)?", a: ["3", "6", "8", "9"], c: 2, e: "\\( 2^n = 2^3 = 8 \\)." },
+        { q: "95. La expresión \\( p \\rightarrow q \\) es equivalente a:", a: ["\\( \\sim p \\vee q \\)", "\\( p \\wedge q \\)", "\\( q \\rightarrow p \\)", "\\( \\sim q \\)"], c: 0, e: "Definición de la implicación material." },
+        { q: "96. Proposición Compuesta:", a: ["Tiene un solo sujeto y predicado", "Tiene conectivos lógicos y une varias simples", "Es una orden", "No tiene verbo"], c: 1, e: "Ej. 'Llueve y hace frío'." },
+        { q: "97. Lenguaje natural:", a: ["El que hablamos cotidianamente (Español, Inglés)", "El de las matemáticas", "El de las computadoras", "El de señas"], c: 0, e: "Suele tener ambigüedades semánticas." },
+        { q: "98. Símbolo cuantificador universal ('Para todo x'):", a: ["\\( \\exists \\)", "\\( \\forall \\)", "\\( \\rightarrow \\)", "\\( \\in \\)"], c: 1, e: "Lógica de predicados." },
+        { q: "99. Símbolo cuantificador existencial ('Existe algún x'):", a: ["\\( \\exists \\)", "\\( \\forall \\)", "\\( \\subset \\)", "\\( = \\)"], c: 0, e: "Particularidad." },
+        { q: "100. Formalización de 'Si estudias, aprobarás':", a: ["\\( p \\wedge q \\)", "\\( p \\vee q \\)", "\\( p \\rightarrow q \\)", "\\( \\sim p \\)"], c: 2, e: "Relación causa-efecto condicional." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; 
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        // MathJax
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

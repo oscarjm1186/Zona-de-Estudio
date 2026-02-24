@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia de México Contemporáneo II</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #006400; /* Verde Bandera / Institucional */
+            --secondary-color: #8B0000; /* Rojo Ladrillo / Histórico */
+            --bg-color: #fcfcfc;
+            --card-bg: #ffffff;
+            --text-main: #2d2d2d;
+            --success: #2e7d32;
+            --error: #c62828;
+            --warning: #f57f17;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
+        }
+
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 3px double var(--secondary-color);
+            margin-top: 6px;
+        }
+        .header h1 { color: var(--text-main); margin: 0; font-size: 2rem; }
+        .header h2 { color: var(--secondary-color); margin: 10px 0 0; font-weight: bold; font-size: 1.2rem; font-family: sans-serif; }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary-color);
+            transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+
+        .q-text { font-size: 1.15rem; font-weight: bold; margin-bottom: 20px; display: block; font-family: sans-serif; }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: sans-serif;
+        }
+        .options label:hover {
+            background: #f0f4c3;
+            border-color: var(--primary-color);
+        }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.2); accent-color: var(--primary-color); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-family: sans-serif;
+        }
+        .feedback.correct { background: #e8f5e9; border-left: 4px solid var(--success); color: #1b5e20; }
+        .feedback.incorrect { background: #ffebee; border-left: 4px solid var(--error); color: #b71c1c; }
+        .feedback.unanswered { background: #fff8e1; border-left: 4px solid var(--warning); color: #f57f17; }
+
+        #submitBtn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 18px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(139, 0, 0, 0.3);
+            transition: 0.3s;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #submitBtn:hover { background: #600000; transform: scale(1.02); }
+
+        #score-board {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            margin-top: 30px;
+            display: none;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #scrollTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="header">
+    <h1>Simulador Historia de México Contemporáneo II</h1>
+    <p>Crisis del Sistema (1900-1940) • Estado Benefactor (1940-1982) • Neoliberalismo (1982-Actualidad)</p>
+</div>
+
+<div class="container">
+    <form id="quizForm">
+        <div id="quizContainer"></div>
+        <button type="button" id="submitBtn" onclick="gradeQuiz()">Calificar Examen</button>
+    </form>
+    <div id="score-board"></div>
+</div>
+
+<button id="scrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">↑</button>
+
+<script>
+    /* BANCO DE PREGUNTAS CORREGIDO */
+    const questions = [
+        // --- UNIDAD 1: Crisis del sistema y reconstrucción (1900-1940) ---
+        { q: "1. Obra periodística escrita por John Kenneth Turner que denunció la esclavitud en el Porfiriato:", a: ["México Bárbaro", "La Sucesión Presidencial", "Los de Abajo", "México Profundo"], c: 0, e: "Turner documentó la explotación en Valle Nacional y Yucatán." },
+        { q: "2. Entrevista concedida por Porfirio Díaz en 1908 donde afirmó que México estaba listo para la democracia:", a: ["Entrevista Taft-Díaz", "Entrevista Díaz-Creelman", "Entrevista Madero-Zapata", "Tratados de Bucareli"], c: 1, e: "Fue el detonante político para la formación de partidos de oposición." },
+        { q: "3. Partido político fundado por los hermanos Flores Magón, precursor de la Revolución:", a: ["Partido Antirreeleccionista", "Partido Liberal Mexicano (PLM)", "Partido Constitucionalista", "PNR"], c: 1, e: "El PLM difundió ideas anarcosindicalistas y liberales contra Díaz." },
+        { q: "4. Huelga minera de 1906 reprimida brutalmente, considerada precursora de la Revolución:", a: ["Huelga de Río Blanco", "Huelga de Cananea", "Huelga Ferrocarrilera", "Huelga Textil"], c: 1, e: "Ocurrió en Sonora, exigiendo 'salarios iguales a trabajo igual' frente a trabajadores estadounidenses." },
+        { q: "5. Libro escrito por Francisco I. Madero en 1908:", a: ["La Sucesión Presidencial de 1910", "El Plan de San Luis", "México Bárbaro", "Sentimientos de la Nación"], c: 0, e: "Planteaba la necesidad de elecciones libres y la no reelección." },
+        { q: "6. Lema principal del maderismo:", a: ["Tierra y Libertad", "Sufragio Efectivo, No Reelección", "México para los mexicanos", "La tierra es de quien la trabaja"], c: 1, e: "Bandera política del Plan de San Luis." },
+        { q: "7. Plan proclamado por Emiliano Zapata en 1911 desconociendo a Madero por no restituir las tierras:", a: ["Plan de Guadalupe", "Plan de Ayala", "Plan de la Empacadora", "Plan de San Luis"], c: 1, e: "Exigía la reforma agraria inmediata: 'Tierra y Libertad'." },
+        { q: "8. Evento de 1913 conocido como la 'Decena Trágica' que culminó con:", a: ["La renuncia de Díaz", "El asesinato de Madero y Pino Suárez", "La Convención de Aguascalientes", "La promulgación de la Constitución"], c: 1, e: "Fue un golpe de estado orquestado por Victoriano Huerta." },
+        { q: "9. Caudillo que encabezó la División del Norte:", a: ["Emiliano Zapata", "Venustiano Carranza", "Francisco Villa", "Álvaro Obregón"], c: 2, e: "Doroteo Arango, alias Pancho Villa, lideró esta poderosa fuerza militar." },
+        { q: "10. Documento promulgado por Carranza para desconocer el gobierno usurpador de Huerta:", a: ["Plan de Guadalupe", "Plan de Ayala", "Plan de Agua Prieta", "Plan de Tuxtepec"], c: 0, e: "Su objetivo era restaurar el orden constitucional." },
+        { q: "11. Artículo constitucional de 1917 que establece la educación laica, gratuita y obligatoria:", a: ["Artículo 27", "Artículo 123", "Artículo 3", "Artículo 130"], c: 2, e: "Uno de los principales logros sociales de la Carta Magna." },
+        { q: "12. Artículo constitucional que regula la propiedad de la tierra y los recursos del subsuelo:", a: ["Artículo 3", "Artículo 27", "Artículo 123", "Artículo 83"], c: 1, e: "Base legal para la Reforma Agraria y la expropiación petrolera." },
+        { q: "13. Artículo que establece los derechos laborales (jornada de 8 horas, huelga, salario mínimo):", a: ["Artículo 123", "Artículo 27", "Artículo 130", "Artículo 5"], c: 0, e: "Responde a las demandas de Cananea y Río Blanco." },
+        { q: "14. Grupo político que ascendió al poder en 1920 tras la muerte de Carranza:", a: ["Los Científicos", "El Grupo Sonora", "Los Convencionalistas", "Los Zapatistas"], c: 1, e: "Integrado por Obregón, Calles y De la Huerta." },
+        { q: "15. Tratados firmados por Obregón para obtener el reconocimiento de EE.UU.:", a: ["Tratados de Córdoba", "Tratados de Bucareli", "Tratados de Teoloyucan", "Tratados de Guadalupe-Hidalgo"], c: 1, e: "Comprometían a México a no aplicar retroactivamente el Art. 27 a petroleras gringas." },
+        { q: "16. Secretario de Educación Pública que impulsó el vasconcelismo y las misiones culturales:", a: ["Jaime Torres Bodet", "José Vasconcelos", "Justo Sierra", "Narciso Bassols"], c: 1, e: "Primer titular de la SEP, creada en 1921." },
+        { q: "17. Conflicto religioso ocurrido durante el gobierno de Plutarco Elías Calles (1926-1929):", a: ["Guerra de Reforma", "Guerra Cristera", "Guerra de Castas", "Guerra de los Pasteles"], c: 1, e: "Enfrentamiento entre el Estado y milicias católicas por la 'Ley Calles'." },
+        { q: "18. Periodo donde Calles ejercía el poder real detrás de los presidentes (1928-1934):", a: ["El Porfiriato", "El Maximato", "El Cardenismo", "El Milagro Mexicano"], c: 1, e: "Calles era el 'Jefe Máximo de la Revolución'." },
+        { q: "19. Partido fundado en 1929 para transitar de un gobierno de caudillos a uno de instituciones:", a: ["PRI", "PNR", "PRM", "PAN"], c: 1, e: "Partido Nacional Revolucionario, abuelo del actual PRI." },
+        { q: "20. Presidente que decretó la Expropiación Petrolera el 18 de marzo de 1938:", a: ["Lázaro Cárdenas", "Manuel Ávila Camacho", "Plutarco Elías Calles", "Abelardo L. Rodríguez"], c: 0, e: "Uno de los actos de mayor nacionalismo económico." },
+        { q: "21. Modelo de partido corporativo creado por Cárdenas en 1938 (sectores obrero, campesino, popular, militar):", a: ["PNR", "PRM", "PRI", "Morena"], c: 1, e: "Partido de la Revolución Mexicana." },
+        { q: "22. Central obrera fundada en 1936 bajo el liderazgo de Vicente Lombardo Toledano:", a: ["CROM", "CTM", "CROC", "CNOP"], c: 1, e: "Confederación de Trabajadores de México, pilar del corporativismo." },
+        { q: "23. Institución educativa superior fundada en 1936 por Lázaro Cárdenas:", a: ["UNAM", "UAM", "IPN", "Colmex"], c: 2, e: "El Instituto Politécnico Nacional, creado para la independencia tecnológica." },
+        { q: "24. Política exterior mexicana aplicada ante la Guerra Civil Española:", a: ["Neutralidad absoluta", "Apoyo a Franco", "Apoyo a la República y asilo a refugiados", "Indiferencia"], c: 2, e: "México recibió a miles de exiliados españoles ('Los Niños de Morelia')." },
+        { q: "25. La educación socialista fue implementada en el artículo 3° durante el gobierno de:", a: ["Obregón", "Cárdenas", "Ávila Camacho", "Alemán"], c: 1, e: "Buscaba combatir el fanatismo y crear una sociedad igualitaria." },
+        { q: "26. Asesinato político que marcó el fin de la etapa de los caudillos en 1928:", a: ["Francisco Villa", "Emiliano Zapata", "Álvaro Obregón (presidente electo)", "Venustiano Carranza"], c: 2, e: "Asesinado en 'La Bombilla' por José de León Toral." },
+        { q: "27. Pintor muralista que plasmó la historia de México en el Palacio Nacional:", a: ["Frida Kahlo", "Diego Rivera", "Rufino Tamayo", "José Luis Cuevas"], c: 1, e: "Parte del movimiento muralista impulsado por Vasconcelos." },
+        { q: "28. ¿Qué significa CROM?", a: ["Confederación Regional Obrera Mexicana", "Centro Revolucionario de Obreros", "Comité Regional de Organización", "Confederación Revolucionaria"], c: 0, e: "Primera gran central obrera oficialista (era de Obregón/Calles)." },
+        { q: "29. ¿Qué fue el 'Presidencialismo'?", a: ["Sistema donde el Congreso manda", "Concentración excesiva de poder en el Ejecutivo", "Elección directa por el pueblo", "Gobierno sin presidente"], c: 1, e: "Característica central del sistema político mexicano del siglo XX." },
+        { q: "30. ¿Qué significa CNC?", a: ["Comisión Nacional de Cambio", "Confederación Nacional Campesina", "Centro Nacional de Cultura", "Comité de Negocios"], c: 1, e: "Organización del sector campesino del partido oficial." },
+
+        // --- UNIDAD 2: El Estado Benefactor y su crisis (1940-1982) ---
+        { q: "31. Política de 'Unidad Nacional' fue implementada por:", a: ["Lázaro Cárdenas", "Manuel Ávila Camacho", "Miguel Alemán", "Díaz Ordaz"], c: 1, e: "Para reconciliar clases sociales ante el contexto de la Segunda Guerra Mundial." },
+        { q: "32. Modelo económico que sustituye importaciones por producción local (1940-1954):", a: ["Neoliberalismo", "ISI (Industrialización por Sustitución de Importaciones)", "Desarrollo Compartido", "Economía de enclave"], c: 1, e: "México empezó a producir lo que antes compraba fuera." },
+        { q: "33. Fenómeno de alto crecimiento económico y baja inflación (1954-1970):", a: ["Milagro Mexicano (Desarrollo Estabilizador)", "La Docena Trágica", "El Maximato", "La Crisis del 29"], c: 0, e: "Etapa de oro de la economía mexicana." },
+        { q: "34. Escuadrón aéreo mexicano que participó en la Segunda Guerra Mundial:", a: ["Escuadrón 201", "División del Norte", "Fuerza Aérea Expedicionaria", "Los Dorados"], c: 0, e: "Pelearon en el frente del Pacífico (Filipinas)." },
+        { q: "35. Presidente que inició la construcción de Ciudad Universitaria y fomentó el turismo:", a: ["Lázaro Cárdenas", "Miguel Alemán Valdés", "Ruiz Cortines", "López Mateos"], c: 1, e: "Primer presidente civil de la posrevolución." },
+        { q: "36. Hecho social que otorgó el voto a la mujer a nivel federal en 1953:", a: ["Reforma Agraria", "Reforma Política de Ruiz Cortines", "Plan de Ayala", "Constitución de 1917"], c: 1, e: "Durante el gobierno de Adolfo Ruiz Cortines." },
+        { q: "37. Movimiento gremial de 1958 encabezado por Demetrio Vallejo:", a: ["Movimiento Médico", "Movimiento Ferrocarrilero", "Movimiento Estudiantil", "Movimiento Magisterial"], c: 1, e: "Exigían democracia sindical y mejoras salariales." },
+        { q: "38. Presidente que nacionalizó la industria eléctrica en 1960:", a: ["Adolfo López Mateos", "Gustavo Díaz Ordaz", "Luis Echeverría", "Miguel Alemán"], c: 0, e: "Consolidó la soberanía energética." },
+        { q: "39. Institución de seguridad social para trabajadores del Estado creada en 1959:", a: ["IMSS", "ISSSTE", "Secretaría de Salud", "Insabi"], c: 1, e: "Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado." },
+        { q: "40. Libro de texto gratuito fue una iniciativa educativa de:", a: ["Vasconcelos", "Jaime Torres Bodet (Gobierno de López Mateos)", "Justo Sierra", "Elba Esther Gordillo"], c: 1, e: "Para garantizar educación básica estandarizada y gratuita." },
+        { q: "41. Evento trágico ocurrido el 2 de octubre de 1968:", a: ["Halconazo", "Matanza de Tlatelolco", "Huelga de la UNAM", "Sismo del 85"], c: 1, e: "Represión estudiantil en la Plaza de las Tres Culturas." },
+        { q: "42. Organización paramilitar usada en la represión del 68:", a: ["Batallón Olimpia", "Los Halcones", "La Brigada Blanca", "Guardia Nacional"], c: 0, e: "Identificados por un guante blanco en la mano izquierda." },
+        { q: "43. Modelo económico de Luis Echeverría (1970-1976):", a: ["Desarrollo Estabilizador", "Desarrollo Compartido", "Neoliberalismo", "Alianza para la Producción"], c: 1, e: "Buscaba distribuir mejor la riqueza, pero aumentó el gasto público y la deuda." },
+        { q: "44. Suceso represivo del 10 de junio de 1971:", a: ["Tlatelolco", "El Halconazo (Jueves de Corpus)", "Acteal", "Aguas Blancas"], c: 1, e: "Ataque a estudiantes por el grupo paramilitar 'Los Halcones'." },
+        { q: "45. Fenómeno de los años 70 caracterizado por la lucha armada clandestina:", a: ["Guerra Sucia", "Revolución Cristera", "Guerra de Castas", "Independencia"], c: 0, e: "El Estado combatió guerrillas urbanas (Liga 23 de Septiembre) y rurales (Lucio Cabañas)." },
+        { q: "46. Líder guerrillero en la sierra de Guerrero (Partido de los Pobres):", a: ["Genaro Vázquez", "Lucio Cabañas", "Subcomandante Marcos", "Valentín Campa"], c: 1, e: "Maestro rural que se levantó en armas ante la miseria." },
+        { q: "47. Reforma política de 1977 impulsada por Reyes Heroles:", a: ["Prohibió partidos de izquierda", "Legalizó partidos como el Comunista (LOPPE)", "Creó el IFE", "Permitió la reelección"], c: 1, e: "Ley de Organizaciones Políticas y Procesos Electorales." },
+        { q: "48. Modelo económico de José López Portillo (1976-1982):", a: ["Alianza para la Producción", "Desarrollo Compartido", "Neoliberalismo", "Milagro Mexicano"], c: 0, e: "Basado en la exportación masiva de petróleo." },
+        { q: "49. Causa principal de la crisis de 1982:", a: ["Caída de los precios del petróleo y endeudamiento excesivo", "Guerra mundial", "Falta de petróleo", "Sanciones de la ONU"], c: 0, e: "La 'petrolización' de la economía hizo vulnerable al país." },
+        { q: "50. Medida desesperada tomada por López Portillo en su último informe (1982):", a: ["Venta de Telmex", "Nacionalización de la Banca", "Firma del TLC", "Renuncia"], c: 1, e: "Culpó a los 'sacadólares' de la crisis." },
+        { q: "51. Frase célebre de López Portillo sobre la riqueza petrolera:", a: ["Arriba y Adelante", "Defenderé el peso como un perro", "Administrar la abundancia", "La solución somos todos"], c: 2, e: "Creía que el petróleo resolvería todos los problemas financieros." },
+        { q: "52. Sistema Alimentario Mexicano (SAM) buscaba:", a: ["Importar comida", "Autosuficiencia alimentaria en granos básicos", "Vender comida a EE.UU.", "Crear comida chatarra"], c: 1, e: "Estrategia del sexenio de López Portillo." },
+        { q: "53. Organismo internacional con el que México firmó 'Cartas de Intención' para manejar su deuda:", a: ["ONU", "FMI", "OEA", "OTAN"], c: 1, e: "El Fondo Monetario Internacional impuso medidas de austeridad." },
+        { q: "54. ¿Qué es la 'Guerra Sucia'?", a: ["Guerra con basura", "Represión ilegal del Estado contra disidentes políticos", "Conflicto con EE.UU.", "Guerra contra el narco"], c: 1, e: "Uso de desapariciones forzadas y tortura en los 70s." },
+        { q: "55. Instituto creado en 1972 para créditos de vivienda:", a: ["INFONAVIT", "FOVISSSTE", "IMSS", "FONCOT"], c: 0, e: "Instituto del Fondo Nacional de la Vivienda para los Trabajadores." },
+        { q: "56. Presidente que inauguró el Metro de la CDMX en 1969:", a: ["López Mateos", "Díaz Ordaz", "Echeverría", "Alemán"], c: 1, e: "Símbolo de modernidad urbana." },
+        { q: "57. Política demográfica implementada en los 70s:", a: ["Tener muchos hijos", "Planificación familiar ('La familia pequeña vive mejor')", "Prohibir hijos", "Exportar gente"], c: 1, e: "Se creó el CONAPO para frenar la explosión demográfica." },
+        { q: "58. La 'Carta de Deberes y Derechos Económicos de los Estados' fue propuesta por:", a: ["Echeverría", "López Portillo", "Díaz Ordaz", "Salinas"], c: 0, e: "Iniciativa de liderazgo tercermundista en la ONU." },
+        { q: "59. ¿Qué país rompió relaciones con México tras la caída de Somoza en Nicaragua?", a: ["Cuba", "Nicaragua", "Estados Unidos", "Ninguno, México apoyó al Sandinismo"], c: 3, e: "México apoyó la Revolución Sandinista (política exterior activa)." },
+        { q: "60. Cantinflas y Pedro Infante pertenecen a la época del cine conocida como:", a: ["Nuevo Cine Mexicano", "Cine de Ficheras", "Época de Oro", "Cine Mudo"], c: 2, e: "Auge cultural entre los 40s y 50s." },
+
+        // --- UNIDAD 3: Neoliberalismo en México (1982-Actualidad) ---
+        { q: "61. Presidente que inició la aplicación del modelo Neoliberal (1982-1988):", a: ["Miguel de la Madrid", "Carlos Salinas", "López Portillo", "Vicente Fox"], c: 0, e: "Implementó el PIRE y la 'Renovación Moral'." },
+        { q: "62. Característica principal del Neoliberalismo:", a: ["Estado fuerte y propietario", "Reducción del Estado y libre mercado", "Economía cerrada", "Socialismo"], c: 1, e: "Privatización de empresas y apertura comercial." },
+        { q: "63. Acuerdo comercial internacional al que México ingresó en 1986 (GATT):", a: ["TLCAN", "Acuerdo General sobre Aranceles y Comercio", "Unión Europea", "Mercosur"], c: 1, e: "Precursor de la Organización Mundial del Comercio (OMC)." },
+        { q: "64. Sismo que devastó la Ciudad de México el 19 de septiembre de 1985:", a: ["Terremoto del 85", "Sismo del Ángel", "Gran Terremoto", "Sismo de 2017"], c: 0, e: "Reveló la incompetencia del gobierno y despertó a la sociedad civil." },
+        { q: "65. Candidato presidencial del Frente Democrático Nacional en 1988:", a: ["Carlos Salinas", "Cuauhtémoc Cárdenas", "Manuel Clouthier", "Rosario Ibarra"], c: 1, e: "Hijo del general Cárdenas, rompió con el PRI (Corriente Democrática)." },
+        { q: "66. Suceso controversial de la elección de 1988:", a: ["Caída del Sistema", "Voto electrónico", "Segunda vuelta", "Suspensión de elecciones"], c: 0, e: "Manuel Bartlett anunció que el sistema de cómputo falló." },
+        { q: "67. Programa social insignia de Carlos Salinas de Gortari:", a: ["Oportunidades", "Solidaridad (PRONASOL)", "Vivir Mejor", "Sembrando Vida"], c: 1, e: "Buscaba legitimar su gobierno mediante obras públicas en zonas pobres." },
+        { q: "68. Tratado comercial que entró en vigor el 1 de enero de 1994:", a: ["GATT", "TLCAN (NAFTA)", "Alianza del Pacífico", "T-MEC"], c: 1, e: "Tratado de Libre Comercio con EE.UU. y Canadá." },
+        { q: "69. Grupo armado que se levantó en Chiapas el mismo día que inició el TLCAN:", a: ["EPR", "EZLN (Zapatistas)", "ERPI", "Liga 23"], c: 1, e: "Ejército Zapatista de Liberación Nacional, liderado por Marcos." },
+        { q: "70. Candidato del PRI asesinado en Lomas Taurinas en 1994:", a: ["José Francisco Ruiz Massieu", "Luis Donaldo Colosio", "Cardenal Posadas", "Manuel Buendía"], c: 1, e: "Su muerte generó inestabilidad política y económica." },
+        { q: "71. Crisis económica al inicio del sexenio de Zedillo (1994-1995):", a: ["Error de Diciembre (Efecto Tequila)", "Crack del 29", "Lunes Negro", "Petrolización"], c: 0, e: "Devaluación abrupta del peso frente al dólar." },
+        { q: "72. Fondo bancario que convirtió deuda privada de bancos en deuda pública:", a: ["PEMEX", "FOBAPROA", "SAT", "NAFIN"], c: 1, e: "Fondo Bancario de Protección al Ahorro." },
+        { q: "73. Matanza de campesinos en Guerrero en 1995 (Gobierno de Zedillo):", a: ["Acteal", "Aguas Blancas", "Tlatelolco", "San Fernando"], c: 1, e: "Provocó la aparición del EPR." },
+        { q: "74. Primer partido de oposición en ganar la presidencia en 2000:", a: ["PRD", "PAN", "PT", "Verde"], c: 1, e: "Con Vicente Fox, terminando 71 años de gobierno del PRI." },
+        { q: "75. Proyecto de infraestructura fallido de Fox (Aeropuerto):", a: ["Santa Lucía", "Texcoco (Atenco)", "Toluca", "Tizayuca"], c: 1, e: "Cancelado por la resistencia de los campesinos de Atenco." },
+        { q: "76. Elección presidencial polémica de 2006 declarada ganadora por:", a: ["López Obrador", "Felipe Calderón", "Roberto Madrazo", "Patricia Mercado"], c: 1, e: "Ganó por un margen de 0.56%." },
+        { q: "77. Estrategia principal del gobierno de Felipe Calderón:", a: ["Pactos económicos", "Guerra contra el Narcotráfico", "Reforma energética", "Reforma educativa"], c: 1, e: "Militarización de la seguridad pública." },
+        { q: "78. Sindicato de maestros poderoso en la política mexicana:", a: ["SNTE", "STUNAM", "SME", "SITIAVW"], c: 0, e: "Dirigido por décadas por Elba Esther Gordillo." },
+        { q: "79. ¿Qué es la Globalización?", a: ["Cierre de fronteras", "Interdependencia económica y cultural mundial", "Guerra mundial", "Dominio de un solo país"], c: 1, e: "Proceso acelerado por el neoliberalismo y la tecnología." },
+        { q: "80. Tecnócratas son:", a: ["Políticos militares", "Políticos economistas con posgrados en el extranjero", "Líderes sindicales", "Guerrilleros"], c: 1, e: "Grupo que dominó el gobierno desde Salinas hasta Peña Nieto." },
+        { q: "81. Modificación al Art. 27 por Salinas permitió:", a: ["Reparto agrario masivo", "Venta de tierras ejidales", "Nacionalización de tierras", "Prohibición de venta"], c: 1, e: "Fin del reparto agrario y privatización del ejido." },
+        { q: "82. Empresa estatal de teléfonos privatizada por Salinas:", a: ["Telmex", "Cofetel", "Imetel", "Satmex"], c: 0, e: "Vendida a Carlos Slim." },
+        { q: "83. ¿Qué significa IFE (hoy INE)?", a: ["Instituto Federal Electoral", "Instituto de Financiamiento", "Institución Federal", "Iglesia Federal"], c: 0, e: "Creado en 1990 para dar credibilidad a las elecciones." },
+        { q: "84. Asesinato de un Cardenal en Guadalajara en 1993:", a: ["Posadas Ocampo", "Ruiz Massieu", "Colosio", "Camarena"], c: 0, e: "Reveló el poder creciente del narcotráfico." },
+        { q: "85. Nombre de la guerrilla aparecida en 1996 en Guerrero y Oaxaca:", a: ["EZLN", "EPR (Ejército Popular Revolucionario)", "Sendero Luminoso", "FARC"], c: 1, e: "Respuesta a la pobreza y represión (Aguas Blancas)." },
+        { q: "86. Huelga estudiantil de 1999-2000 paralizó a la:", a: ["IPN", "UNAM", "UAM", "Chapingo"], c: 1, e: "Contra el aumento de cuotas (Reglamento General de Pagos)." },
+        { q: "87. Programa social de Zedillo que sustituyó a Solidaridad:", a: ["Progresa", "Oportunidades", "Vivir Mejor", "Bienestar"], c: 0, e: "Educación, Salud y Alimentación (luego Oportunidades)." },
+        { q: "88. Primer Jefe de Gobierno electo del D.F. (1997):", a: ["López Obrador", "Cuauhtémoc Cárdenas", "Marcelo Ebrard", "Rosario Robles"], c: 1, e: "Inicio del dominio de la izquierda en la capital." },
+        { q: "89. ¿Qué es el 'Bono Demográfico'?", a: ["Dinero regalado", "Mayoría de población en edad de trabajar", "Exceso de ancianos", "Falta de niños"], c: 1, e: "Oportunidad económica que México tuvo en las últimas décadas." },
+        { q: "90. Secretario de Gobernación de Calderón muerto en accidente aéreo:", a: ["Mouriño", "Creel", "Blake Mora", "Abascal"], c: 0, e: "Juan Camilo Mouriño (2008)." },
+        { q: "91. Compañía de Luz y Fuerza del Centro fue extinguida por:", a: ["Fox", "Calderón", "Zedillo", "Peña Nieto"], c: 1, e: "Conflicto con el sindicato SME en 2009." },
+        { q: "92. Pandemia que afectó a México en 2009:", a: ["COVID-19", "Influenza AH1N1", "Ébola", "Cólera"], c: 1, e: "Paralizó la economía y actividades escolares." },
+        { q: "93. Festejo del Bicentenario de la Independencia ocurrió en:", a: ["2000", "2010", "2021", "1910"], c: 1, e: "Durante el gobierno de Felipe Calderón." },
+        { q: "94. ¿Qué es el IPAB?", a: ["Instituto para el Ahorro Bancario", "Impuesto al Producto", "Instituto de Protección al Ahorro Bancario", "Institución Privada"], c: 2, e: "Organismo que sustituyó al FOBAPROA." },
+        { q: "95. TLCAN incluye a:", a: ["México, USA, Guatemala", "México, USA, Canadá", "México, Brasil, Argentina", "Todo América"], c: 1, e: "Bloque comercial de América del Norte." },
+        { q: "96. Alternancia política se refiere a:", a: ["Cambio de partido en el poder", "Reelección", "Golpe de estado", "Cambio de constitución"], c: 0, e: "Lograda pacíficamente en el año 2000." },
+        { q: "97. ¿Qué son las remesas?", a: ["Impuestos", "Dinero enviado por migrantes", "Pagos de deuda", "Exportaciones de petróleo"], c: 1, e: "Fuente vital de divisas para la economía mexicana." },
+        { q: "98. Movimiento 'Yo Soy 132' surgió en:", a: ["2006", "2012", "2000", "2018"], c: 1, e: "Estudiantes universitarios exigiendo democratización de medios." },
+        { q: "99. Privatización de la Banca ocurrió con:", a: ["López Portillo", "Salinas de Gortari", "De la Madrid", "Zedillo"], c: 1, e: "Revirtió la nacionalización de 1982." },
+        { q: "100. Reforma al artículo 130 constitucional permitió:", a: ["Reelección", "Reconocimiento jurídico de la Iglesia", "Venta de ejidos", "Privatización de Pemex"], c: 1, e: "Restableció relaciones con el Vaticano (Salinas)." }
+    ];
+
+    function loadQuiz() {
+        const container = document.getElementById("quizContainer");
+        container.innerHTML = "";
+
+        questions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            
+            // Pregunta
+            const qTitle = document.createElement("span");
+            qTitle.className = "q-text";
+            qTitle.innerHTML = item.q;
+            card.appendChild(qTitle);
+
+            // Opciones
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
+            
+            item.a.forEach((opt, i) => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `q${index}`;
+                input.value = i;
+                input.onclick = updateProgress; // Actualizar barra al hacer click
+
+                const span = document.createElement("span");
+                span.innerHTML = opt;
+                
+                label.appendChild(input);
+                label.appendChild(span);
+                optionsDiv.appendChild(label);
+            });
+            card.appendChild(optionsDiv);
+
+            // Feedback
+            const feed = document.createElement("div");
+            feed.id = `feed${index}`;
+            feed.className = "feedback";
+            card.appendChild(feed);
+
+            container.appendChild(card);
+        });
+
+        // MathJax refresh por si hubiera algo matemático
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgress() {
+        const total = questions.length;
+        let answered = 0;
+        for(let i=0; i<total; i++) {
+            if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+        }
+        const pct = (answered / total) * 100;
+        document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let unanswered = 0;
+
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feed = document.getElementById(`feed${index}`);
+            feed.style.display = "block";
+
+            if (!selected) {
+                unanswered++;
+                feed.className = "feedback unanswered";
+                feed.innerHTML = `<strong>Sin responder.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+            } else {
+                const val = parseInt(selected.value);
+                if (val === item.c) {
+                    score++;
+                    feed.className = "feedback correct";
+                    feed.innerHTML = `<strong>¡Correcto!</strong> <br> <em>${item.e}</em>`;
+                } else {
+                    feed.className = "feedback incorrect";
+                    feed.innerHTML = `<strong>Incorrecto.</strong> La correcta era: ${item.a[item.c]} <br> <em>${item.e}</em>`;
+                }
+            }
+        });
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Calificación Final: ${score} / 100`;
+        
+        board.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Botón flotante
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTop");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>
